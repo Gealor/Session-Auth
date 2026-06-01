@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Подтверждение почты</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0e14;
+      --surface: #13171f;
+      --border: #1e2430;
+      --accent: #4fffb0;
+      --accent-dim: rgba(79, 255, 176, 0.12);
+      --accent-glow: rgba(79, 255, 176, 0.35);
+      --text: #e8eaf0;
+      --muted: #5a6277;
+      --error: #ff5e7a;
+      --error-dim: rgba(255, 94, 122, 0.12);
+      --warning: #ffc947;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,255,176,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,255,176,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* Glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(79,255,176,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      animation: slideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* top accent line */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      border-radius: 1px;
+    }
+
+    /* ---- Icon ---- */
+    .icon-wrap {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 2rem;
+      position: relative;
+    }
+
+    .icon-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid var(--accent-dim);
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+
+    .icon-ring:nth-child(2) {
+      inset: -10px;
+      animation-delay: 0.4s;
+      opacity: 0.5;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50%       { opacity: 0.2; transform: scale(1.05); }
+    }
+
+    .icon-inner {
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid rgba(79,255,176,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      transition: all 0.4s ease;
+    }
+
+    /* ---- Typography ---- */
+    .label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    /* ---- Token input ---- */
+    .field {
+      position: relative;
+      margin-bottom: 1.25rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-align: left;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.04em;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      color: var(--text);
+      font-family: 'DM Sans', monospace;
+      font-size: 0.93rem;
+      letter-spacing: 0.03em;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus {
+      border-color: rgba(79,255,176,0.45);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .field input::placeholder { color: var(--muted); }
+
+    /* ---- Button ---- */
+    .btn {
+      width: 100%;
+      padding: 0.9rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #0b0e14;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px var(--accent-glow);
+    }
+
+    .btn:active:not(:disabled) { transform: translateY(0); }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Spinner inside button */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(0,0,0,0.25);
+      border-top-color: #0b0e14;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Alert box ---- */
+    .alert {
+      display: none;
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      text-align: left;
+      margin-top: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert.success {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      background: var(--accent-dim);
+      border: 1px solid rgba(79,255,176,0.25);
+      color: var(--accent);
+    }
+
+    .alert.error {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      background: var(--error-dim);
+      border: 1px solid rgba(255,94,122,0.25);
+      color: var(--error);
+    }
+
+    .alert-icon { flex-shrink: 0; font-size: 1rem; }
+
+    /* ---- Success state overlay ---- */
+    .success-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .success-state .big-check {
+      font-size: 3rem;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .success-state h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .success-state p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* ---- URL token hint ---- */
+    .token-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      text-align: left;
+    }
+
+    .token-hint span {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ---- divider ---- */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .footer-note {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .footer-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .footer-note a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+
+  <!-- Icon -->
+  <div class="icon-wrap">
+    <div class="icon-ring"></div>
+    <div class="icon-ring"></div>
+    <div class="icon-inner" id="cardIcon">✉️</div>
+  </div>
+
+  <!-- Header -->
+  <div id="formSection">
+    <div class="label">Верификация аккаунта</div>
+    <h1>Подтвердите почту</h1>
+    <p class="subtitle">Введите токен из письма, которое мы отправили на вашу почту, чтобы активировать аккаунт.</p>
+
+    <!-- Token field -->
+    <div class="field">
+      <label for="tokenInput">Токен подтверждения</label>
+      <input
+        type="text"
+        id="tokenInput"
+        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div class="token-hint" id="tokenHint"></div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn" id="verifyBtn" onclick="verify()">
+      Подтвердить почту
+    </button>
+
+    <!-- Alert -->
+    <div class="alert" id="alertBox">
+      <span class="alert-icon" id="alertIcon"></span>
+      <span id="alertText"></span>
+    </div>
+
+    <hr class="divider" />
+    <p class="footer-note">
+      Не получили письмо? <a id="resendEmailLink" href="#">Отправить повторно</a>
+    </p>
+  </div>
+
+  <!-- Success overlay (hidden initially) -->
+  <div class="success-state" id="successState">
+    <div class="big-check">✅</div>
+    <h2>Почта подтверждена!</h2>
+    <p>Ваш аккаунт успешно активирован. Можете войти в систему.</p>
+    <hr class="divider" style="width:100%"/>
+    <p class="footer-note"><a href="/login">Перейти ко входу →</a></p>
+  </div>
+
+</div>
+
+<script>
+  // ── Auto-fill token from URL param (?token=...) ──────────────────
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  const tokenInput = document.getElementById('tokenInput');
+  const tokenHint  = document.getElementById('tokenHint');
+
+  const apiUrl = "http://localhost:8000/auth/verify"
+
+  if (urlToken) {
+    tokenInput.value = urlToken;
+    tokenHint.innerHTML = '🔑 Токен получен из ссылки подтверждения';
+    tokenHint.querySelector && null; // just set text
+    tokenHint.innerHTML = '<span>Токен получен из ссылки подтверждения</span>';
+  }
+
+  // ── Verify ───────────────────────────────────────────────────────
+  async function verify() {
+    const token = tokenInput.value.trim();
+    const btn   = document.getElementById('verifyBtn');
+    const alert = document.getElementById('alertBox');
+
+    // hide previous alert
+    alert.className = 'alert';
+
+    if (!token) {
+      showAlert('error', '⚠️', 'Пожалуйста, введите токен подтверждения.');
+      tokenInput.focus();
+      return;
+    }
+
+    // Loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Проверяем...';
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+
+      if (res.ok) {
+        showSuccess();
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 400) {
+        showAlert('error', '🚫', data.detail || 'Недействительный токен подтверждения. Проверьте ссылку из письма.');
+      } else if (res.status === 404) {
+        showAlert('error', '👤', data.detail || 'Пользователь не найден. Возможно, аккаунт уже был удалён.');
+      } else {
+        showAlert('error', '⚡', 'Произошла ошибка сервера. Попробуйте позже.');
+      }
+
+    } catch (err) {
+      showAlert('error', '🌐', 'Нет соединения с сервером. Проверьте подключение к интернету.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Подтвердить почту';
+    }
+  }
+
+  function showAlert(type, icon, text) {
+    const box  = document.getElementById('alertBox');
+    const ico  = document.getElementById('alertIcon');
+    const txt  = document.getElementById('alertText');
+    ico.textContent = icon;
+    txt.textContent = text;
+    box.className = 'alert ' + type;
+  }
+
+  function showSuccess() {
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('successState').style.display = 'flex';
+    document.getElementById('cardIcon').textContent = '✅';
+  }
+
+  // ── Allow Enter key ───────────────────────────────────────────────
+  tokenInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') verify();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from core.auth.security import get_current_user
+from core.logger import log
+from dependencies import get_user_service
+from schemas.exceptions.database import UniqueException
+from schemas.exceptions.users import UserNotDeletedException, UserNotFoundException
+from schemas.response_schemas import ResponseSchema
+from schemas.user_schemas import UserRead, UserUpdate
+from services.user_service import UserService
+
+
+router = APIRouter(prefix="/user")
+
+
+@router.get("/me")
+async def read_me(
+    current_user: UserRead = Depends(get_current_user),
+) -> UserRead:
+    return UserRead.model_validate(current_user)
+
+
+@router.patch("/update/me")
+async def update_my_profile(
+    update_data: UserUpdate,
+    current_user: UserRead = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+) -> UserRead:
+    try:
+        result = await user_service.update_user(
+            user_id=current_user.id, update_data=update_data
+        )
+    except UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    except UniqueException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"\'{e}\' with this value already exist"
+        )
+    except Exception as e:
+        log.error("Unexpected error: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error"
+        )
+
+    return result
+
+
+@router.delete("/delete/me")
+async def delete_my_account(
+    current_user: UserRead = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+) -> ResponseSchema:
+    try:
+        result = await user_service.delete_self_user(
+            user_id=current_user.id
+        )
+    except Exception as e:
+        log.error("Unexpected error: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error"
+        )
+
+    return result
+
+
+@router.patch("/restore")
+async def restore_user(
+    user_id: int,
+    user_service: UserService = Depends(get_user_service),
+) -> ResponseSchema:
+    try:
+        result = await user_service.restore_deleted_user(user_id=user_id)
+    except UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    except UserNotDeletedException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User not deleted"
+        )
+    except Exception as e:
+        log.error("Unexpected error: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error"
+        )
+
+    return result

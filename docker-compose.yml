@@ -1,0 +1,52 @@
+version: '3.8'
+networks:
+  dev:
+
+services:
+  app:
+    build: .
+    ports:
+      - 8000:8000
+    networks:
+      - dev
+
+  db:
+    image: postgres
+    env_file:
+      - .env
+    ports:
+      - ${PGPORT}:${PGPORT} # замечание: чтобы docker-compose увидел переменную PGPORT, нужно указать ее в файле .env, который должен находиться в той же папке, что и docker-compose.yml
+    volumes:
+    - auth_bd_data:/var/lib/postgresql/data
+    networks:
+      - dev
+
+  redis:
+    image: redis:7
+    ports:
+      - 6379:6379
+    networks:
+      - dev
+  
+  redis_gui:
+    image: redis/redisinsight
+    ports:
+      - 5540:5540
+    networks:
+      - dev
+
+  maildev:
+    image: maildev/maildev
+    environment:
+      - TZ=Europe/Samara
+      - MAILDEV_WEB_PORT=1080
+      - MAILDEV_SMTP_PORT=1025
+    ports:
+      - 8080:1080
+      - 1025:1025
+    networks:
+      - dev
+
+volumes:  # указание глобального тома где-то в папках докера, чтобы не мозолила глаза
+  auth_bd_data:
+

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Confirm your email</title>
+  <!--[if mso]>
+  <noscript>
+    <xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body, html {
+      background-color: #0d1117;
+      margin: 0;
+      padding: 0;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #c9d1d9;
+    }
+
+    .email-wrapper {
+      background-color: #0d1117;
+      padding: 48px 16px;
+      width: 100%;
+    }
+
+    .email-container {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── Logo / brand ── */
+    .brand {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .brand-name {
+      font-family: 'Syne', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #4fffb0;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+    }
+
+    /* ── Card ── */
+    .card {
+      background-color: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* Top accent stripe */
+    .card-stripe {
+      height: 3px;
+      background: linear-gradient(90deg, #4fffb0 0%, #00d4aa 50%, #4fffb0 100%);
+    }
+
+    .card-body {
+      padding: 40px 40px 36px;
+    }
+
+    /* ── Icon block ── */
+    .icon-block {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .icon-circle {
+      display: inline-block;
+      width: 64px;
+      height: 64px;
+      background-color: rgba(79, 255, 176, 0.1);
+      border: 1px solid rgba(79, 255, 176, 0.25);
+      border-radius: 50%;
+      line-height: 64px;
+      font-size: 28px;
+      text-align: center;
+    }
+
+    /* ── Typography ── */
+    .eyebrow {
+      font-family: 'Syne', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #4fffb0;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-family: 'Syne', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #e6edf3;
+      text-align: center;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .greeting {
+      font-size: 15px;
+      color: #8b949e;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .greeting strong {
+      color: #c9d1d9;
+      font-weight: 500;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #21262d;
+      margin: 28px 0;
+    }
+
+    /* ── CTA Button ── */
+    .btn-wrap {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #4fffb0;
+      color: #0d1117 !important;
+      font-family: 'Syne', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 8px;
+      text-transform: uppercase;
+    }
+
+    /* ── Token block ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #6e7681;
+      margin-bottom: 8px;
+    }
+
+    .token-box {
+      background-color: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+
+    .token-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      color: #4fffb0;
+      letter-spacing: 0.08em;
+      word-break: break-all;
+    }
+
+    /* ── Link fallback ── */
+    .link-fallback {
+      margin-bottom: 0;
+    }
+
+    .link-url {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      color: #58a6ff;
+      word-break: break-all;
+      text-decoration: underline;
+    }
+
+    /* ── Expiry note ── */
+    .expiry-note {
+      text-align: center;
+      font-size: 13px;
+      color: #6e7681;
+      margin-top: 24px;
+      line-height: 1.5;
+    }
+
+    .expiry-note strong { color: #8b949e; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 28px 20px 0;
+    }
+
+    .footer p {
+      font-size: 12px;
+      color: #484f58;
+      line-height: 1.7;
+    }
+
+    .footer a {
+      color: #6e7681;
+      text-decoration: underline;
+    }
+
+    .footer .copy {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #30363d;
+    }
+
+    /* ── Responsive ── */
+    @media only screen and (max-width: 480px) {
+      .card-body { padding: 28px 24px; }
+      h1 { font-size: 22px; }
+      .btn { padding: 13px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="email-wrapper">
+  <div class="email-container">
+
+    <!-- Brand -->
+    <div class="brand">
+      <span class="brand-name">YOURSITE</span>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+      <div class="card-stripe"></div>
+      <div class="card-body">
+
+        <!-- Icon -->
+        <div class="icon-block">
+          <div class="icon-circle">✉️</div>
+        </div>
+
+        <!-- Heading -->
+        <p class="eyebrow">Account Verification</p>
+        <h1>Confirm your email address</h1>
+
+        <!-- Greeting -->
+        <p class="greeting">
+          Hi, <strong>{{ user.nickname }}</strong>!<br />
+          Click the button below to verify your email and activate your account.
+        </p>
+
+        <!-- CTA -->
+        <div class="btn-wrap">
+          <a href="{{ url }}" class="btn" target="_blank" rel="noopener noreferrer">
+            Verify Email →
+          </a>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Manual token -->
+        <p class="section-label">Or enter the code manually</p>
+        <p class="greeting" style="text-align:left; margin-bottom:10px;">
+          Open the verification page and paste the code below:
+        </p>
+
+        <!-- Verification page link -->
+        <div class="token-box link-fallback" style="margin-bottom:12px;">
+          <p class="section-label" style="margin-bottom:6px;">Verification page</p>
+          <a href="{{ verification_link }}" class="link-url" target="_blank" rel="noopener noreferrer">{{ verification_link }}</a>
+        </div>
+
+        <!-- Token code -->
+        <div class="token-box">
+          <p class="section-label" style="margin-bottom:6px;">Your code</p>
+          <span class="token-code">{{ verification_token }}</span>
+        </div>
+
+        <!-- Expiry notice -->
+        <p class="expiry-note">
+          This link and code will expire in <strong>24 hours</strong>.<br />
+          If you didn't create an account, you can safely ignore this email.
+        </p>
+
+      </div><!-- /card-body -->
+    </div><!-- /card -->
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        You received this email because an account was registered with this address.<br />
+        If this wasn't you, please <a href="#">contact support</a>.
+      </p>
+      <p class="copy">© 2026 YOURSITE. All rights reserved.</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
