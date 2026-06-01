@@ -50,7 +50,7 @@ class DatabaseSettings(BaseSettings):
     db_password: Annotated[str, Field(alias="POSTGRES_PASSWORD")]
     db_host: str = Field(default="localhost", alias="POSTGRES_HOST")
     db_port: int = Field(default=6000, alias="PGPORT")
-    db_echo: bool = True
+    db_echo: bool = False
 
     @property
     def db_url(self):
