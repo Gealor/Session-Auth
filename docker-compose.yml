@@ -2,6 +2,8 @@ version: '3.8'
 networks:
   dev:
 
+
+# TODO: добавить в сервисы фронтэнд для подтверждения почты (verify-email.html)
 services:
   app:
     build: .
