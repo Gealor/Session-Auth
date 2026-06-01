@@ -16,6 +16,7 @@ class TokenRepository:
         self.db_session = db_session
 
     def _load_user(self, stmt: Select) -> Select:
+        # joinedload подгружает связи с помощью соедниения (join), а selectinload с помощью второго select (зачастую применятся при отношении ...-ко-многим)
         loaded_user_stmt = stmt.options(joinedload(SessionToken.user))
         return loaded_user_stmt
 

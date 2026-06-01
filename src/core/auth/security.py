@@ -56,8 +56,10 @@ async def get_current_user(
         )
     
     # Если отключен load_user (False), по факту будет два запроса, один на получение токена сессии, второй - на получение пользователя
+    # log.info("Awaitable Attrs loading...")
     # user = await token_record.awaitable_attrs.user
     # user = UserRead.model_validate(user)
+    
     # Если включен load_user (True), тут же будет один запрос, который подгрузит вместе с токеном сессии сразу пользователя, без доп.запроса
     user = UserRead.model_validate(token_record.user) 
     
