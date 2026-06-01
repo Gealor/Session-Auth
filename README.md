@@ -48,30 +48,14 @@ lambda: datetime.now(UTC), важное уточнение в базе данн�
 ## 1. Создание .env файла
 Создайте в корневой папке проекта файл .env и скопируйте параметры из .env.template в новый файл. Если вы хотите задать свои данные для логина, пароля и имени базы данных, тогда поменяйте соответствующие поля POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, PGPORT
 
-## 2. Генерация приватного и публичного ключей
-Вводить команды в корневой папке проекта, не в src.
-Приватный ключ:
-
-```shell
-# Generate an RSA private key, of size 2048
-openssl genrsa -out src/core/auth/certs/jwt-private.pem 2048
-```
-
-Публичный ключ:
-
-```shell
-# Extract the public key from the key pair, which can be used in a certificate
-openssl rsa -in src/core/auth/certs/jwt-private.pem -outform PEM -pubout -out src/core/auth/certs/jwt-public.pem
-```
-
-## 3. Поднятие docker-compose
+## 2. Поднятие docker-compose
 В корневой папке проекта (где лежит docker-compose.yml) пропишите
 ```
 docker compose build --no-cache
 docker compose up
 ```
 
-## 4. Применить alembic миграции
+## 3. Применить alembic миграции
 После поднятия контейнеров, пропишите в консоли, чтобы применить миграции
 ```
 docker compose exec app sh -c "cd src && uv run alembic upgrade head" 

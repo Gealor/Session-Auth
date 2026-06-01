@@ -7,7 +7,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CERTS_PATH = BASE_DIR / "core" / "auth" / "certs"
 ENV_FILE = BASE_DIR.parent / ".env"
 ENV_TEMPLATE = BASE_DIR.parent / ".env.template"
 
