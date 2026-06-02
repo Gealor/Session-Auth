@@ -1,9 +1,8 @@
 # Замечания по проекту
 
 1. Отсутствие покрытия тестами
-2. Отсутствие CORS
-3. Отсутствие logging middleware
-4. Отсутствие rate limiting
+2. Отсутствие logging middleware
+3. Отсутствие rate limiting
 ```псевдо-код для rate limiting с Redis и TTL
 redis_client = redis.from_url(
     "redis://localhost:6379",
@@ -39,7 +38,7 @@ async def rate_limit_middleware(request: Request, call_next):
     return response
 ```
 
-5. datetime.now(tz=UTC).replace(tzinfo=None) — костыль для удаления timezone в UserDelete схеме
+4. datetime.now(tz=UTC).replace(tzinfo=None) — костыль для удаления timezone в UserDelete схеме
 (5-ый пункт пофиксил, изменив в базе данных тип на DATETIME WITH TIMEZONE, и в UserDelete схеме изменил фабрику deleted_at на
 lambda: datetime.now(UTC), важное уточнение в базе данных время будет ХРАНИТЬСЯ в формате UTC с информацией о таймзоне, если смотреть по СУБД типо pgAdmin4, DBeaver и т.д. там может ОТОБРАЖАТЬ время со смещением от UTC, но по факту мы будем получить время в формате UTC из ORM)
 
