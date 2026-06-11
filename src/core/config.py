@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, EmailStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -33,6 +33,14 @@ class AuthSettings(BaseModel):
     @property
     def session_id_expire_minutes(self):
         return 24 * 60 * self.session_id_expire_days
+    
+
+class CronSettings(BaseModel):
+    clear_database_config: dict[str, Any] = {
+        "hour": 15, # по умолчанию время по UTC
+        "minute": 25,
+        "day_of_week": "mon, wed, thu, fri",
+    }
 
 
 # Чтобы не указывать в .env параметры с начальным идентификатором, например, database как указано в Settings классе
@@ -119,6 +127,7 @@ class Settings(BaseSettings):
 
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
     mailing: MailingSettings = MailingSettings()
+    cron: CronSettings = CronSettings()
     
 
 settings = Settings()
