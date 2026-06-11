@@ -1,4 +1,5 @@
 from core.auth.passwords import compare_hashed_passwords, hash_password
+from core.logger import log
 from repositories.redis.verification_token_repository import VerificationTokenRepository
 from repositories.session_repository import TokenRepository
 from repositories.user_repository import UserRepository
@@ -63,12 +64,14 @@ class UserService:
     async def update_user_password(self, user_id: int, new_password: str) -> None:
         user = await self.user_repo.get_user_by_id(user_id=user_id)
         if user is None:
+            log.error("User with id=%d not found", user_id)
             raise UserNotFoundException
 
         new_password_bytes = new_password.encode("utf-8")
         old_password_hash = user.password.encode("utf-8")
 
         if compare_hashed_passwords(new_password_bytes, old_password_hash):
+            log.error("New password match with old. User_id=%d", user_id)
             raise NewPasswordMatchWithOldException
         
         updated_password = {
@@ -79,5 +82,7 @@ class UserService:
             user_id=user_id,
             dict_data=updated_password,
         )
+        log.info("Password successful change on '%s' for user_id=%d", new_password, user_id)
+    
 
 
