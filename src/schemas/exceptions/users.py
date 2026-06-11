@@ -15,3 +15,7 @@ class UserNotDeletedException(BaseUserException):
 
 class UserAlreadyVerifiedException(BaseUserException):
     pass
+
+
+class NewPasswordMatchWithOldException(BaseUserException):
+    pass

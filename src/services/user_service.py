@@ -1,7 +1,8 @@
+from core.auth.passwords import compare_hashed_passwords, hash_password
 from repositories.redis.verification_token_repository import VerificationTokenRepository
 from repositories.session_repository import TokenRepository
 from repositories.user_repository import UserRepository
-from schemas.exceptions.users import UserAlreadyVerifiedException, UserNotDeletedException, UserNotFoundException
+from schemas.exceptions.users import NewPasswordMatchWithOldException, UserAlreadyVerifiedException, UserNotDeletedException, UserNotFoundException
 from schemas.response_schemas import ResponseSchema
 from schemas.user_schemas import UserRead, UserUpdate
 
@@ -23,7 +24,7 @@ class UserService:
         if not user:
             raise UserNotFoundException
 
-        return user
+        return UserRead.model_validate(user)
 
     async def delete_self_user(self, user_id: int) -> ResponseSchema:
         await self.user_repo.delete_user(user_id=user_id)
@@ -58,3 +59,25 @@ class UserService:
         await self.user_repo.update_data_by_dict(
             user_id=user_id, dict_data=data, exclude_inactive=True
         )
+
+    async def update_user_password(self, user_id: int, new_password: str) -> None:
+        user = await self.user_repo.get_user_by_id(user_id=user_id)
+        if user is None:
+            raise UserNotFoundException
+
+        new_password_bytes = new_password.encode("utf-8")
+        old_password_hash = user.password.encode("utf-8")
+
+        if compare_hashed_passwords(new_password_bytes, old_password_hash):
+            raise NewPasswordMatchWithOldException
+        
+        updated_password = {
+            "password": hash_password(new_password).decode("utf-8"),
+        }
+
+        await self.user_repo.update_data_by_dict(
+            user_id=user_id,
+            dict_data=updated_password,
+        )
+
+

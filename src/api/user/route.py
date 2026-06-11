@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from core.auth.security import get_current_user
 from core.logger import log
 from dependencies import get_user_service
 from schemas.exceptions.database import UniqueException
-from schemas.exceptions.users import UserNotDeletedException, UserNotFoundException
+from schemas.exceptions.users import NewPasswordMatchWithOldException, UserNotDeletedException, UserNotFoundException
 from schemas.response_schemas import ResponseSchema
 from schemas.user_schemas import UserRead, UserUpdate
 from services.user_service import UserService
@@ -88,3 +88,29 @@ async def restore_user(
         )
 
     return result
+
+@router.patch("/password")
+async def update_user_password_by_id(
+    user_id: int = Query(),
+    new_password: str = Body(embed=True),
+    user_service: UserService = Depends(get_user_service),
+) -> ResponseSchema:
+    try:
+        await user_service.update_user_password(
+            user_id=user_id, 
+            new_password=new_password
+        )
+    except UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User by these id not exist"
+        )
+    except NewPasswordMatchWithOldException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password match with old. Please choose different password."
+        )
+
+    return ResponseSchema(
+        msg=f"Password change to {new_password}"
+    )
