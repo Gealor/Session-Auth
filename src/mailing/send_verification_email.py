@@ -4,6 +4,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.mailing.send_email import send_email
 from src.schemas.user_schemas import UserRead
+from src.core.logger import log
 
 
 async def send_verification_email(
@@ -43,6 +44,8 @@ async def send_verification_email(
         verification_link=verification_link,
         verification_token=verification_token,
     ) 
+
+    log.info("Send verification email...")
     await send_email(
         recepient=recepient,
         subject=subject,
