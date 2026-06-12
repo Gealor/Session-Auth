@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 
 from src.core.auth.security import get_current_user
 from src.core.config import settings
@@ -6,7 +6,6 @@ from src.core.cookies import _clear_cookie, _set_cookie
 from src.core.database import db_session_getter
 from src.core.logger import log
 from src.core.redis_client import get_redis_client
-from src.mailing.send_verification_email import send_verification_email
 from src.schemas.exceptions.database import UniqueException
 from src.schemas.exceptions.email_verification import InvalidVerificationTokenException
 from src.schemas.exceptions.security import (

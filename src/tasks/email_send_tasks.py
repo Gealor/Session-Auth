@@ -1,5 +1,3 @@
-import asyncio
-
 from src.schemas.user_schemas import UserRead
 from src.core.celery import celery
 from src.mailing.send_verification_email import send_verification_email
