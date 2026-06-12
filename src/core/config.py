@@ -35,6 +35,27 @@ class AuthSettings(BaseModel):
         return 24 * 60 * self.session_id_expire_days
     
 
+class RabbitMQSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=(ENV_TEMPLATE, ENV_FILE),
+        case_sensitive=False,
+        extra="ignore",  # Игнорировать другие переменные в .env
+    )
+
+    rabbit_protocol: str = "amqp"
+    rabbit_host: Annotated[str, Field(alias="RABBITMQ_HOST")]
+    rabbit_port: Annotated[str, Field(alias="RABBITMQ_PORT")]
+    rabbit_user: Annotated[str, Field(alias="RABBITMQ_USER")]
+    rabbit_password: Annotated[str, Field(alias="RABBITMQ_PASSWORD")]
+
+    @property
+    def rabbitmq_url(self):
+        return (
+            f"{self.rabbit_protocol}://{self.rabbit_user}:{self.rabbit_password}@" \
+            f"{self.rabbit_host}:{self.rabbit_port}"
+        )
+
+
 class CronSettings(BaseModel):
     clear_database_config: dict[str, Any] = {
         "hour": 15, # по умолчанию время по UTC
@@ -127,6 +148,7 @@ class Settings(BaseSettings):
 
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
     mailing: MailingSettings = MailingSettings()
+    rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
     cron: CronSettings = CronSettings()
     
 
