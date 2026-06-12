@@ -1,7 +1,7 @@
 from fastapi import Request, Response
 
-from core.logger import log
-from core.config import settings
+from .logger import log
+from .config import settings
 
 
 def _set_cookie(key: str, value: str, response: Response) -> None:

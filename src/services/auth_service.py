@@ -3,20 +3,20 @@ from dateutil.relativedelta import relativedelta
 
 from pydantic import EmailStr
 
-from core.config import settings
-from core.auth.creation_tokens import create_token
-from core.auth.passwords import compare_hashed_passwords
-from core.logger import log
-from repositories.session_repository import TokenRepository
-from repositories.user_repository import UserRepository
-from schemas.exceptions.security import (
+from src.core.config import settings
+from src.core.auth.creation_tokens import create_token
+from src.core.auth.passwords import compare_hashed_passwords
+from src.core.logger import log
+from src.repositories.session_repository import TokenRepository
+from src.repositories.user_repository import UserRepository
+from src.schemas.exceptions.security import (
     PasswordsNotMatchException,
     UserEmailAlreadyExistsException,
     UserNotActiveException,
 )
-from schemas.exceptions.users import UserNotFoundException
-from schemas.response_schemas import ResponseSchema
-from schemas.user_schemas import (
+from src.schemas.exceptions.users import UserNotFoundException
+from src.schemas.response_schemas import ResponseSchema
+from src.schemas.user_schemas import (
     UserRegister,
     UserRegisterWithRepeatPassword,
 )

@@ -1,6 +1,6 @@
 from asyncpg import UniqueViolationError
 
-from schemas.exceptions.base import AppBaseException
+from .base import AppBaseException
 
 
 class BaseDatabaseException(AppBaseException):

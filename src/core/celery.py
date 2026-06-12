@@ -6,4 +6,5 @@ celery = Celery(
     "src.core.celery", 
     broker=settings.rabbitmq.rabbitmq_url,
     backend="rpc://",
+    include=["src.tasks.log_tasks"]
 )

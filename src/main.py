@@ -4,10 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from core.config import settings
-from core.logger import log_uvicorn
-from api import main_router
-from lifespan_app import Lifespan
+from src.core.config import settings
+from src.core.logger import log_uvicorn
+from src.api import main_router
+from src.lifespan_app import Lifespan
 
 lifespan_app = Lifespan()
 

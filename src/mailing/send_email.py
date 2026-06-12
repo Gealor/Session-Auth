@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 
 import aiosmtplib
 
-from core.config import settings
+from src.core.config import settings
 
 
 async def send_email(

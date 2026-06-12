@@ -1,11 +1,11 @@
-from core.auth.passwords import compare_hashed_passwords, hash_password
-from core.logger import log
-from repositories.redis.verification_token_repository import VerificationTokenRepository
-from repositories.session_repository import TokenRepository
-from repositories.user_repository import UserRepository
-from schemas.exceptions.users import NewPasswordMatchWithOldException, UserAlreadyVerifiedException, UserNotDeletedException, UserNotFoundException
-from schemas.response_schemas import ResponseSchema
-from schemas.user_schemas import UserRead, UserUpdate
+from src.core.auth.passwords import compare_hashed_passwords, hash_password
+from src.core.logger import log
+from src.repositories.redis.verification_token_repository import VerificationTokenRepository
+from src.repositories.session_repository import TokenRepository
+from src.repositories.user_repository import UserRepository
+from src.schemas.exceptions.users import NewPasswordMatchWithOldException, UserAlreadyVerifiedException, UserNotDeletedException, UserNotFoundException
+from src.schemas.response_schemas import ResponseSchema
+from src.schemas.user_schemas import UserRead, UserUpdate
 
 
 class UserService:

@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, func, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from src.models.base import Base
 
 if TYPE_CHECKING:
-    from models.user import User
+    from src.models.user import User
 
 
 class SessionToken(Base):

@@ -3,12 +3,11 @@ import asyncio
 from redis.exceptions import ConnectionError as RedisConnectionError
 from sqlalchemy import text
 
-from schemas.exceptions.database import DatabaseStartupException
-from schemas.exceptions.redis import RedisStartupException
-from core.database import async_session_maker
-from core.logger import log
-from core.redis_client import redis_client
-from cron.scheduler import scheduler
+from src.schemas.exceptions.database import DatabaseStartupException
+from src.schemas.exceptions.redis import RedisStartupException
+from src.core.database import async_session_maker
+from src.core.logger import log
+from src.core.redis_client import redis_client
 
 
 class Lifespan:
@@ -22,11 +21,8 @@ class Lifespan:
         except (RedisStartupException, DatabaseStartupException):
             raise
 
-        self._startup_scheduler()
-
     async def shutdown(self):
         """Закрыть соединения при завершении приложения"""
-        self._shutdown_scheduler()
         try:
             await redis_client.aclose()
             log.info("Redis successful closed")
@@ -62,10 +58,3 @@ class Lifespan:
         except Exception as e:
             raise DatabaseStartupException(f"Unexpected error during connection to database: {e}") from e
         
-    def _startup_scheduler(self):
-        scheduler.start()
-        log.info("Scheduler startup!")
-
-    def _shutdown_scheduler(self):
-        scheduler.shutdown()
-        log.info("Scheduler shutdown!")

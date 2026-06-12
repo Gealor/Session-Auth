@@ -1,30 +1,30 @@
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
 
-from core.auth.security import get_current_user
-from core.config import settings
-from core.cookies import _clear_cookie, _set_cookie
-from core.database import db_session_getter
-from core.logger import log
-from core.redis_client import get_redis_client
-from mailing.send_verification_email import send_verification_email
-from schemas.exceptions.database import UniqueException
-from schemas.exceptions.email_verification import InvalidVerificationTokenException
-from schemas.exceptions.security import (
+from src.core.auth.security import get_current_user
+from src.core.config import settings
+from src.core.cookies import _clear_cookie, _set_cookie
+from src.core.database import db_session_getter
+from src.core.logger import log
+from src.core.redis_client import get_redis_client
+from src.mailing.send_verification_email import send_verification_email
+from src.schemas.exceptions.database import UniqueException
+from src.schemas.exceptions.email_verification import InvalidVerificationTokenException
+from src.schemas.exceptions.security import (
     PasswordsNotMatchException,
     UserEmailAlreadyExistsException,
     UserNotActiveException,
 )
-from schemas.exceptions.users import UserAlreadyVerifiedException, UserNotFoundException
-from schemas.response_schemas import ResponseSchema
-from schemas.user_schemas import (
+from src.schemas.exceptions.users import UserAlreadyVerifiedException, UserNotFoundException
+from src.schemas.response_schemas import ResponseSchema
+from src.schemas.user_schemas import (
     LoginCredentials,
     UserRead,
     UserRegisterWithRepeatPassword,
 )
-from services.auth_service import AuthService
-from dependencies import get_user_service
-from services.email_verification import EmailVerificationService
-from services.user_service import UserService
+from src.services.auth_service import AuthService
+from src.dependencies import get_user_service
+from src.services.email_verification import EmailVerificationService
+from src.services.user_service import UserService
 
 
 router = APIRouter(prefix="/auth", tags=["Session"])

@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
-from models.sessions import SessionToken
-from core.logger import log
-from schemas.exceptions.database import DatabaseException
-from schemas.exceptions.token import SessionTokenNotFoundException
+from src.models.sessions import SessionToken
+from src.core.logger import log
+from src.schemas.exceptions.database import DatabaseException
+from src.schemas.exceptions.token import SessionTokenNotFoundException
 
 
 class TokenRepository:

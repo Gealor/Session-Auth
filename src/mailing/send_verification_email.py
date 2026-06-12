@@ -2,8 +2,8 @@ from pathlib import Path
 from textwrap import dedent
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from mailing.send_email import send_email
-from schemas.user_schemas import UserRead
+from src.mailing.send_email import send_email
+from src.schemas.user_schemas import UserRead
 
 
 async def send_verification_email(

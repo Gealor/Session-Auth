@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
-from core.auth.security import get_current_user
-from core.logger import log
-from dependencies import get_user_service
-from schemas.exceptions.database import UniqueException
-from schemas.exceptions.users import NewPasswordMatchWithOldException, UserNotDeletedException, UserNotFoundException
-from schemas.response_schemas import ResponseSchema
-from schemas.user_schemas import UserRead, UserUpdate
-from services.user_service import UserService
+from src.core.auth.security import get_current_user
+from src.core.logger import log
+from src.dependencies import get_user_service
+from src.schemas.exceptions.database import UniqueException
+from src.schemas.exceptions.users import NewPasswordMatchWithOldException, UserNotDeletedException, UserNotFoundException
+from src.schemas.response_schemas import ResponseSchema
+from src.schemas.user_schemas import UserRead, UserUpdate
+from src.services.user_service import UserService
 
 
 router = APIRouter(prefix="/user")
