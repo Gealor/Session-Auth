@@ -8,7 +8,7 @@ from src.schemas.exceptions.users import NewPasswordMatchWithOldException, UserN
 from src.schemas.response_schemas import ResponseSchema
 from src.schemas.user_schemas import UserRead, UserUpdate
 from src.services.user_service import UserService
-
+from src.tasks.log_tasks import log_action
 
 router = APIRouter(prefix="/user")
 
@@ -17,6 +17,7 @@ router = APIRouter(prefix="/user")
 async def read_me(
     current_user: UserRead = Depends(get_current_user),
 ) -> UserRead:
+    log_action.delay(current_user.id)
     return UserRead.model_validate(current_user)
 
 

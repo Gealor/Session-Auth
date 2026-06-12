@@ -25,6 +25,7 @@ from src.services.auth_service import AuthService
 from src.dependencies import get_user_service
 from src.services.email_verification import EmailVerificationService
 from src.services.user_service import UserService
+from src.tasks.email_send_tasks import send_email_for_verification
 
 
 router = APIRouter(prefix="/auth", tags=["Session"])
@@ -117,7 +118,6 @@ async def logout(
 
 @router.post("/send-verification-email", status_code=status.HTTP_202_ACCEPTED)
 async def generate_token_and_send_verification_email(
-    background_tasks: BackgroundTasks,
     current_user: UserRead = Depends(get_current_user),
     redis = Depends(get_redis_client)
 ):
@@ -132,11 +132,7 @@ async def generate_token_and_send_verification_email(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already verified"
         )
-    background_tasks.add_task(
-        send_verification_email,
-        user=current_user,
-        verification_token=token,
-    )
+    send_email_for_verification.delay(user=current_user.model_dump(), verification_token=token)
 
     
 @router.post("/verify")
