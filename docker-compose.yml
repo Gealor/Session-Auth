@@ -61,7 +61,7 @@ services:
   
   celery_worker:
     build: .
-    command: uv run celery -A src.core.celery worker --loglevel=info
+    command: uv run celery --app src.core.celery worker --loglevel=info
     env_file:
       - .env
     networks:
