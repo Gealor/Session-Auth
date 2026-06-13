@@ -56,12 +56,17 @@ class RabbitMQSettings(BaseSettings):
         )
 
 
-class CronSettings(BaseModel):
-    clear_database_config: dict[str, Any] = {
+class CelerySettings(BaseModel):
+    cron_config: dict[str, Any] = {
         "hour": 15, # по умолчанию время по UTC
         "minute": 25,
         "day_of_week": "mon, wed, thu, fri",
     }
+
+    countdown_seconds: int = 10
+    max_retries: int = 5
+
+
 
 
 # Чтобы не указывать в .env параметры с начальным идентификатором, например, database как указано в Settings классе
@@ -149,7 +154,7 @@ class Settings(BaseSettings):
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
     mailing: MailingSettings = MailingSettings()
     rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
-    cron: CronSettings = CronSettings()
+    celery: CelerySettings = CelerySettings()
     
 
 settings = Settings()
