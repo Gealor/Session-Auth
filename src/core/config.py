@@ -67,8 +67,6 @@ class CelerySettings(BaseModel):
     max_retries: int = 5
 
 
-
-
 # Чтобы не указывать в .env параметры с начальным идентификатором, например, database как указано в Settings классе
 # явно наследуемся от BaseSettings, а не BaseModel и прописываем model_config
 class DatabaseSettings(BaseSettings):
