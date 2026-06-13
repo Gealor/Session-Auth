@@ -66,6 +66,14 @@ services:
       - .env
     networks:
       - dev
+  
+  celery_beat:
+    build: .
+    command: uv run celery --app src.core.celery beat --loglevel=info
+    env_file:
+      - .env
+    networks:
+      - dev
 
 volumes:  # указание глобального тома где-то в папках докера, чтобы не мозолила глаза
   auth_bd_data:
