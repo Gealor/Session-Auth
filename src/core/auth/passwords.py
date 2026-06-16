@@ -9,7 +9,7 @@ async def hash_password(
     salt = bcrypt.gensalt()
     pwd_bytes: bytes = password.encode("utf-8")
     return await asyncio.to_thread(bcrypt.hashpw, pwd_bytes, salt) 
-# bcrypt относительно медленная операции и тяжеловесные, также является C-расширением, поэтому GIL отпускается
+# bcrypt имеет относительно медленные операции и тяжеловесные, также является C-расширением, поэтому GIL отпускается
 
 
 async def compare_hashed_passwords(
