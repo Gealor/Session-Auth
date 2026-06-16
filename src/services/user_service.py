@@ -70,12 +70,12 @@ class UserService:
         new_password_bytes = new_password.encode("utf-8")
         old_password_hash = user.password.encode("utf-8")
 
-        if compare_hashed_passwords(new_password_bytes, old_password_hash):
+        if await compare_hashed_passwords(new_password_bytes, old_password_hash):
             log.error("New password match with old. User_id=%d", user_id)
             raise NewPasswordMatchWithOldException
         
         updated_password = {
-            "password": hash_password(new_password).decode("utf-8"),
+            "password": (await hash_password(new_password)).decode("utf-8"),
         }
 
         await self.user_repo.update_data_by_dict(

@@ -6,7 +6,6 @@ from sqlalchemy import Select, Update, and_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth.passwords import hash_password
 from src.models.user import User
 from src.schemas.exceptions.database import DatabaseException, UniqueException
 from src.schemas.exceptions.users import UserNotFoundException
@@ -58,7 +57,7 @@ class UserRepository:
         user = User(
             nickname=user_data.nickname,
             email=user_data.email,
-            password=hash_password(user_data.password).decode("utf-8"),
+            password=user_data.password,
             is_active=True,
         )
 

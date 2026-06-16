@@ -5,7 +5,7 @@ from pydantic import EmailStr
 
 from src.core.config import settings
 from src.core.auth.creation_tokens import create_token
-from src.core.auth.passwords import compare_hashed_passwords
+from src.core.auth.passwords import compare_hashed_passwords, hash_password
 from src.core.logger import log
 from src.repositories.session_repository import TokenRepository
 from src.repositories.user_repository import UserRepository
@@ -56,6 +56,7 @@ class AuthService:
             raise UserEmailAlreadyExistsException
 
         user_register_data = UserRegister(**user_data.model_dump())
+        user_register_data.password = (await hash_password(user_data.password)).decode("utf-8")
         await self.user_repo.create_user(
             user_register_data,
         )
@@ -68,7 +69,7 @@ class AuthService:
             log.error("User by email %s not found", email)
             raise UserNotFoundException
 
-        is_valid = compare_hashed_passwords(
+        is_valid = await compare_hashed_passwords(
             entered_password=password.encode("utf-8"),
             hashed_password=user.password.encode("utf-8"),
         )
