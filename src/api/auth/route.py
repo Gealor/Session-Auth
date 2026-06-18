@@ -142,11 +142,13 @@ async def verify_user(
     try:
         await user_service.verify_user(token)
     except InvalidVerificationTokenException:
+        log.info("Invalid verification token: %s", token)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid verification token"
         )
     except UserAlreadyVerifiedException:
+        log.info("Email already verified")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already verified"
