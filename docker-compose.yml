@@ -11,6 +11,12 @@ services:
       - 8000:8000
     networks:
       - dev
+    depends_on:
+      db:
+        condition: service_started
+        restart: true
+      redis:
+        condition: service_started
 
   db:
     image: postgres
@@ -58,14 +64,22 @@ services:
       - dev
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
   
   celery_worker:
     build: .
-    command: uv run celery --app src.core.celery worker --loglevel=info
+    command: uv run celery --app src.core.celery worker --loglevel=info --pool=threads --concurrency=100 # имеет смысл перейти на потоки, независимо от GIL, т.к. I/O bound и GIL переходит на другой поток. 
     env_file:
       - .env
     networks:
       - dev
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
   
   celery_beat:
     build: .
@@ -74,6 +88,9 @@ services:
       - .env
     networks:
       - dev
+    depends_on:
+      rabbitmq:
+        condition: service_started
 
 volumes:  # указание глобального тома где-то в папках докера, чтобы не мозолила глаза
   auth_bd_data:
