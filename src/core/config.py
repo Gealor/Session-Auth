@@ -57,12 +57,6 @@ class RabbitMQSettings(BaseSettings):
 
 
 class CelerySettings(BaseModel):
-    cron_config: dict[str, Any] = {
-        "hour": 15, # по умолчанию время по UTC
-        "minute": 25,
-        "day_of_week": "mon, wed, thu, fri",
-    }
-
     countdown_seconds: int = 10
     max_retries: int = 5
 
