@@ -13,6 +13,7 @@ from src.mailing.send_verification_email import send_verification_email
     max_retries=settings.celery.max_retries,
     acks_late=True, # Подтверждать задачу, только после выполнения, успешного или с ошибкой ("выполнение" имеется ввиду, что воркер не умер во время ее выполнения)
     reject_on_worker_lost=True, # Возвращать задачу в очередь при сбое воркера
+    ignore_result=True, # не сохранять результат задачи на backend
 ) # внутрь задачи нельзя подавать датаклассы или другие специфичные для языка типы, типы должны быть примитивами (строки, числа, списки и т.д.)
 def send_email_for_verification(
     self,

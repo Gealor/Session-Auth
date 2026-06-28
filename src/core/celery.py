@@ -8,7 +8,7 @@ def prepare_celery() -> Celery:
     celery = Celery(
         "src.core.celery", 
         broker=settings.rabbitmq.rabbitmq_url,
-        backend="rpc://",
+        backend="rpc://", # будет создана отдельная очередь в RabbitMQ, в которой будут копиться результаты выполнения задач
         include=[
             "src.tasks.log_tasks",
             "src.tasks.email_send_tasks",
