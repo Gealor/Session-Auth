@@ -4,10 +4,6 @@ __all__ = ( # Этот __init__.py нужен, чтобы taskiq воркер у
     "log_action",
 )
 
-import sys
-
 from .clear_expired_tokens import cleanup_expired_tokens
 from .email_send_tasks import send_email_for_verification
 from .log_tasks import log_action
-
-print(sys.argv)
