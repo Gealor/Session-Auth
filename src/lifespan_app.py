@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from schemas.exceptions.database import DatabaseStartupException
 from schemas.exceptions.redis import RedisStartupException
-from core.database import async_session_maker
+from core.database import async_session_maker, engine
 from core.logger import log
 from core.redis_client import redis_client
 from cron.scheduler import scheduler
@@ -26,10 +26,12 @@ class Lifespan:
 
     async def shutdown(self):
         """Закрыть соединения при завершении приложения"""
-        self._shutdown_scheduler()
         try:
-            await redis_client.aclose()
-            log.info("Redis successful closed")
+            await asyncio.gather(
+                self._redis_close(),
+                self._engine_dispose(),
+            )
+
         except Exception as e:
             log.error("Unexpected error during Redis close: %s", e)
 
@@ -37,7 +39,7 @@ class Lifespan:
     async def _check_redis(self) -> None:
         """Проверить подключение к Redis"""
         try:
-            pong = await redis_client.ping()
+            pong = await redis_client.ping() # type: ignore
             if not pong:
                 raise RedisStartupException("Redis ping return False")
 
@@ -62,6 +64,14 @@ class Lifespan:
         except Exception as e:
             raise DatabaseStartupException(f"Unexpected error during connection to database: {e}") from e
         
+    async def _redis_close(self) -> None:
+        await redis_client.aclose()
+        log.info("Redis successful closed")
+    
+    async def _engine_dispose(self) -> None:
+        await engine.dispose()
+        log.info("Engine successful disposed!")
+        
     def _startup_scheduler(self):
         scheduler.start()
         log.info("Scheduler startup!")
@@ -69,3 +79,5 @@ class Lifespan:
     def _shutdown_scheduler(self):
         scheduler.shutdown()
         log.info("Scheduler shutdown!")
+
+    
