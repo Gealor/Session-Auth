@@ -24,8 +24,6 @@ class Lifespan:
         except (RedisStartupException, DatabaseStartupException):
             raise
 
-        await broker.startup()
-
     async def shutdown(self):
         """Закрыть соединения при завершении приложения"""
         try:
