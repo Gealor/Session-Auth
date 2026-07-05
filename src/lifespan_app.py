@@ -74,9 +74,11 @@ class Lifespan:
         log.info("Engine successful disposed!")
     
     async def _taskiq_broker_startup(self) -> None:
-        await broker.startup()
+        if not broker.is_worker_process:
+            await broker.startup()
         log.info("Broker successful started!")
 
     async def _taskiq_broker_shutdown(self) -> None:
-        await broker.shutdown()
+        if not broker.is_worker_process:
+            await broker.shutdown()
         log.info("Broker successful shutdown!")

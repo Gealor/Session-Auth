@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import taskiq_fastapi
 from taskiq import SmartRetryMiddleware, TaskiqScheduler
 from taskiq.schedule_sources import LabelScheduleSource
 from taskiq_aio_pika import AioPikaBroker, Queue
@@ -27,6 +28,8 @@ def prepare_taskiq() -> Tuple[AioPikaBroker, TaskiqScheduler]:
             max_delay_exponent=120,
         )
     )
+
+    taskiq_fastapi.init(broker=broker, app_or_path="src.main:app")
 
     scheduler = TaskiqScheduler( # scheduler не выполняет задачи
         broker=broker,
