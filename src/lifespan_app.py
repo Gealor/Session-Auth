@@ -3,6 +3,8 @@ import asyncio
 from redis.exceptions import ConnectionError as RedisConnectionError
 from sqlalchemy import text
 
+from src.core.taskiq_broker import broker
+from src.core.database import engine
 from src.schemas.exceptions.database import DatabaseStartupException
 from src.schemas.exceptions.redis import RedisStartupException
 from src.core.database import async_session_maker
@@ -16,16 +18,23 @@ class Lifespan:
         try:
             await asyncio.gather(
                 self._check_redis(),
-                self._check_database()
+                self._check_database(),
+                self._taskiq_broker_startup()
             )
         except (RedisStartupException, DatabaseStartupException):
             raise
 
+        await broker.startup()
+
     async def shutdown(self):
         """Закрыть соединения при завершении приложения"""
         try:
-            await redis_client.aclose()
-            log.info("Redis successful closed")
+            await asyncio.gather(
+                self._redis_close(),
+                self._engine_dispose(),
+                self._taskiq_broker_shutdown(),
+            )
+
         except Exception as e:
             log.error("Unexpected error during Redis close: %s", e)
 
@@ -33,7 +42,7 @@ class Lifespan:
     async def _check_redis(self) -> None:
         """Проверить подключение к Redis"""
         try:
-            pong = await redis_client.ping()
+            pong = await redis_client.ping() # type: ignore
             if not pong:
                 raise RedisStartupException("Redis ping return False")
 
@@ -57,4 +66,19 @@ class Lifespan:
             raise
         except Exception as e:
             raise DatabaseStartupException(f"Unexpected error during connection to database: {e}") from e
-        
+    
+    async def _redis_close(self) -> None:
+        await redis_client.aclose()
+        log.info("Redis successful closed")
+    
+    async def _engine_dispose(self) -> None:
+        await engine.dispose()
+        log.info("Engine successful disposed!")
+    
+    async def _taskiq_broker_startup(self) -> None:
+        await broker.startup()
+        log.info("Broker successful started!")
+
+    async def _taskiq_broker_shutdown(self) -> None:
+        await broker.shutdown()
+        log.info("Broker successful shutdown!")

@@ -56,12 +56,13 @@ class RabbitMQSettings(BaseSettings):
         )
 
 
-class CelerySettings(BaseModel):
+class TaskIqSettings(BaseModel):
     cron_config: dict[str, Any] = {
-        "hour": 15, # по умолчанию время по UTC
-        "minute": 25,
-        "day_of_week": "mon, wed, thu, fri",
+        "cron": "30 11 * * 1,3,5,6" # минута час день_месяца месяц день_недели 
     }
+    # cron_config: dict[str, Any] = {
+    #     "cron": "*/5 * * * *"
+    # }
 
     countdown_seconds: int = 10
     max_retries: int = 5
@@ -96,6 +97,12 @@ class RedisSettings(BaseSettings):
 
     host: Annotated[str, Field(alias="REDIS_HOST")]
     port: Annotated[int, Field(alias="REDIS_PORT")]
+
+    results_ex_time_in_seconds: int = 1_728_000 
+
+    @property
+    def redis_url(self):
+        return f"redis://{self.host}:{self.port}"
 
 
 class SmtpSettings(BaseSettings):
@@ -152,7 +159,7 @@ class Settings(BaseSettings):
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
     mailing: MailingSettings = MailingSettings()
     rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
-    celery: CelerySettings = CelerySettings()
+    taskiq: TaskIqSettings = TaskIqSettings()
     
 
 settings = Settings()

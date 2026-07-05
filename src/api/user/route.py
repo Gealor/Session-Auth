@@ -17,7 +17,7 @@ router = APIRouter(prefix="/user")
 async def read_me(
     current_user: UserRead = Depends(get_current_user),
 ) -> UserRead:
-    log_action.delay(current_user.id)
+    await log_action.kiq(current_user.id)
     return UserRead.model_validate(current_user)
 
 

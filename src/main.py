@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     await lifespan_app.startup()
     log_uvicorn.info("Start application!")
     yield
-    await lifespan_app.startup()
+    await lifespan_app.shutdown()
     log_uvicorn.info("Terminated. Good day!")
 
 app = FastAPI(title="Session-Auth-Service", lifespan=lifespan)

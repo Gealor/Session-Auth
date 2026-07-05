@@ -17,6 +17,8 @@ services:
         restart: true
       redis:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   db:
     image: postgres
@@ -70,9 +72,9 @@ services:
       timeout: 30s
       retries: 3
   
-  celery_worker:
+  taskiq_worker:
     build: .
-    command: uv run celery --app src.core.celery worker --loglevel=info --pool=threads --concurrency=100 # имеет смысл перейти на потоки, независимо от GIL, т.к. I/O bound и GIL переходит на другой поток. 
+    command: uv run taskiq worker src.core.taskiq_broker:broker --fs-discover --tasks-pattern "src/tasks"
     env_file:
       - .env
     networks:
@@ -81,15 +83,17 @@ services:
       rabbitmq:
         condition: service_healthy
   
-  celery_beat:
+  taskiq_beat:
     build: .
-    command: uv run celery --app src.core.celery beat --loglevel=info
+    command: uv run taskiq scheduler src.core.taskiq_broker:scheduler --fs-discover --tasks-pattern "src/tasks"
     env_file:
       - .env
     networks:
       - dev
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      taskiq_worker:
         condition: service_started
 
 volumes:  # указание глобального тома где-то в папках докера, чтобы не мозолила глаза

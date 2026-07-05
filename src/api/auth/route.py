@@ -131,7 +131,7 @@ async def generate_token_and_send_verification_email(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already verified"
         )
-    send_email_for_verification.delay(user=current_user.model_dump(), verification_token=token)
+    await send_email_for_verification.kiq(user=current_user.model_dump(), verification_token=token)
 
     
 @router.post("/verify")
