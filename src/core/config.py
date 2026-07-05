@@ -57,12 +57,12 @@ class RabbitMQSettings(BaseSettings):
 
 
 class TaskIqSettings(BaseModel):
-    # cron_config: dict[str, Any] = {
-    #     "cron": "30 11 * * 1,3,5,6" # минута час день_месяца месяц день_недели 
-    # }
     cron_config: dict[str, Any] = {
-        "cron": "*/5 * * * *"
+        "cron": "30 11 * * 1,3,5,6" # минута час день_месяца месяц день_недели 
     }
+    # cron_config: dict[str, Any] = {
+    #     "cron": "*/5 * * * *"
+    # }
 
     countdown_seconds: int = 10
     max_retries: int = 5
