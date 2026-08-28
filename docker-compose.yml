@@ -19,7 +19,7 @@ services:
         condition: service_started
 
   db:
-    image: postgres
+    image: postgres:17
     env_file:
       - .env
     ports:
