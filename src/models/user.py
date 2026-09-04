@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
-from models.mixins.deleted_at_mixin import DeletedAtMixin
-from models.mixins.id_pk_mixin import IdPrimaryKeyMixin
-from models.mixins.updated_at_mixin import UpdatedAtMixin
+from .base import Base
+from .mixins.deleted_at_mixin import DeletedAtMixin
+from .mixins.id_pk_mixin import IdPrimaryKeyMixin
+from .mixins.updated_at_mixin import UpdatedAtMixin
 
 
 class User(Base, IdPrimaryKeyMixin, DeletedAtMixin, UpdatedAtMixin):

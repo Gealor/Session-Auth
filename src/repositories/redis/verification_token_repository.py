@@ -1,9 +1,9 @@
 from redis import WatchError
 from redis.asyncio import Redis
 
-from core.config import settings
-from core.logger import log
-from schemas.exceptions.email_verification import InvalidVerificationTokenException
+from src.core.config import settings
+from src.core.logger import log
+from src.schemas.exceptions.email_verification import InvalidVerificationTokenException
 
 
 class VerificationTokenRepository:

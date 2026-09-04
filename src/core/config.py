@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, EmailStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -33,6 +33,39 @@ class AuthSettings(BaseModel):
     @property
     def session_id_expire_minutes(self):
         return 24 * 60 * self.session_id_expire_days
+    
+
+class RabbitMQSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=(ENV_TEMPLATE, ENV_FILE),
+        case_sensitive=False,
+        extra="ignore",  # Игнорировать другие переменные в .env
+    )
+
+    rabbit_protocol: str = "amqp"
+    rabbit_host: Annotated[str, Field(alias="RABBITMQ_HOST")]
+    rabbit_port: Annotated[str, Field(alias="RABBITMQ_PORT")]
+    rabbit_user: Annotated[str, Field(alias="RABBITMQ_USER")]
+    rabbit_password: Annotated[str, Field(alias="RABBITMQ_PASSWORD")]
+
+    @property
+    def rabbitmq_url(self):
+        return (
+            f"{self.rabbit_protocol}://{self.rabbit_user}:{self.rabbit_password}@" \
+            f"{self.rabbit_host}:{self.rabbit_port}"
+        )
+
+
+class TaskIqSettings(BaseModel):
+    cron_config: dict[str, Any] = {
+        "cron": "30 11 * * 1,3,5,6" # минута час день_месяца месяц день_недели 
+    }
+    # cron_config: dict[str, Any] = {
+    #     "cron": "*/5 * * * *"
+    # }
+
+    countdown_seconds: int = 10
+    max_retries: int = 5
 
 
 # Чтобы не указывать в .env параметры с начальным идентификатором, например, database как указано в Settings классе
@@ -64,6 +97,12 @@ class RedisSettings(BaseSettings):
 
     host: Annotated[str, Field(alias="REDIS_HOST")]
     port: Annotated[int, Field(alias="REDIS_PORT")]
+
+    results_ex_time_in_seconds: int = 1_728_000 
+
+    @property
+    def redis_url(self):
+        return f"redis://{self.host}:{self.port}"
 
 
 class SmtpSettings(BaseSettings):
@@ -119,6 +158,8 @@ class Settings(BaseSettings):
 
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
     mailing: MailingSettings = MailingSettings()
+    rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
+    taskiq: TaskIqSettings = TaskIqSettings()
     
 
 settings = Settings()

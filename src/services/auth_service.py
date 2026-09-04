@@ -3,30 +3,29 @@ from dateutil.relativedelta import relativedelta
 
 from pydantic import EmailStr
 
-from core.config import settings
-from core.auth.creation_tokens import create_token
-from core.auth.passwords import compare_hashed_passwords
-from core.logger import log
-from repositories.session_repository import TokenRepository
-from repositories.user_repository import UserRepository
-from schemas.exceptions.security import (
+from src.core.config import settings
+from src.core.auth.creation_tokens import create_token
+from src.core.auth.passwords import compare_hashed_passwords, hash_password
+from src.core.logger import log
+from src.repositories.session_repository import TokenRepository
+from src.repositories.user_repository import UserRepository
+from src.schemas.exceptions.security import (
     PasswordsNotMatchException,
     UserEmailAlreadyExistsException,
     UserNotActiveException,
 )
-from schemas.exceptions.users import UserNotFoundException
-from schemas.response_schemas import ResponseSchema
-from schemas.user_schemas import (
+from src.schemas.exceptions.users import UserNotFoundException
+from src.schemas.response_schemas import ResponseSchema
+from src.schemas.user_schemas import (
     UserRegister,
     UserRegisterWithRepeatPassword,
 )
 
 
 class AuthService:
-    def __init__(self, db_session):
-        self.db_session = db_session
-        self.user_repo = UserRepository(db_session=self.db_session)
-        self.token_repo = TokenRepository(db_session=self.db_session)
+    def __init__(self, user_repo: UserRepository, token_repo: TokenRepository):
+        self.user_repo = user_repo
+        self.token_repo = token_repo
 
     async def _save_session_token(self, user_id: int, token_hash: str):
         existing_token = await self.token_repo.get_token_by_user_id(user_id)
@@ -56,6 +55,7 @@ class AuthService:
             raise UserEmailAlreadyExistsException
 
         user_register_data = UserRegister(**user_data.model_dump())
+        user_register_data.password = (await hash_password(user_data.password)).decode("utf-8")
         await self.user_repo.create_user(
             user_register_data,
         )
@@ -68,7 +68,7 @@ class AuthService:
             log.error("User by email %s not found", email)
             raise UserNotFoundException
 
-        is_valid = compare_hashed_passwords(
+        is_valid = await compare_hashed_passwords(
             entered_password=password.encode("utf-8"),
             hashed_password=user.password.encode("utf-8"),
         )

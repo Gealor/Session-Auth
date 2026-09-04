@@ -6,18 +6,15 @@ from sqlalchemy import Select, Update, and_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.auth.passwords import hash_password
-from models.user import User
-from schemas.exceptions.database import DatabaseException, UniqueException
-from schemas.exceptions.users import UserNotFoundException
-from schemas.user_schemas import (
+from src.models.user import User
+from src.schemas.exceptions.database import DatabaseException, UniqueException
+from src.schemas.exceptions.users import UserNotFoundException
+from src.schemas.user_schemas import (
     UserDelete,
-    UserRead,
     UserRegister,
     UserUpdate,
-    UserWithWorkInformation,
 )
-from core.logger import log
+from src.core.logger import log
 
 
 class UserRepository:
@@ -32,7 +29,7 @@ class UserRepository:
 
     async def get_user_by_email(
         self, email: str | EmailStr, exclude_inactive: bool = False
-    ) -> UserWithWorkInformation | None:
+    ) -> User | None:
         stmt = select(User).where(User.email == email)
         if exclude_inactive:
             stmt = self._exclude_deleted_or_not_active(stmt)
@@ -41,11 +38,11 @@ class UserRepository:
         if user is None:
             return None
 
-        return UserWithWorkInformation.model_validate(user)
+        return user
 
     async def get_user_by_id(
         self, user_id: int, exclude_inactive: bool = False
-    ) -> UserRead | None:
+    ) -> User | None:
         stmt = select(User).where(User.id == user_id)
         if exclude_inactive:
             stmt = self._exclude_deleted_or_not_active(stmt)
@@ -54,13 +51,13 @@ class UserRepository:
         if user is None:
             return None
 
-        return UserRead.model_validate(user)
+        return user
 
-    async def create_user(self, user_data: UserRegister):
+    async def create_user(self, user_data: UserRegister) -> None:
         user = User(
             nickname=user_data.nickname,
             email=user_data.email,
-            password=hash_password(user_data.password).decode("utf-8"),
+            password=user_data.password,
             is_active=True,
         )
 
@@ -116,7 +113,7 @@ class UserRepository:
 
     async def update_user(
         self, user_id: int, update_data: UserUpdate, exclude_inactive: bool = False
-    ) -> UserRead:
+    ) -> User:
         dict_data = update_data.model_dump(exclude_none=True)
 
         user = await self.update_data_by_dict(
@@ -128,9 +125,9 @@ class UserRepository:
             raise UserNotFoundException
         
         log.info("Update user with id=%d", user_id)
-        return UserRead.model_validate(user)
+        return user
 
-    async def delete_user(self, user_id: int):
+    async def delete_user(self, user_id: int) -> None:
         delete_info = UserDelete()
         dict_data = delete_info.model_dump()
 
@@ -140,7 +137,7 @@ class UserRepository:
         )
         log.info("Deleted user with id=%d", user_id)
 
-    async def restore_user(self, user_id: int):
+    async def restore_user(self, user_id: int) -> None:
         update_data = UserDelete(is_active=True, deleted_at=None)
         dict_data = update_data.model_dump()
 

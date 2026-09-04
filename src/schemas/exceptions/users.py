@@ -1,4 +1,4 @@
-from schemas.exceptions.base import AppBaseException
+from .base import AppBaseException
 
 
 class BaseUserException(AppBaseException):
@@ -14,4 +14,8 @@ class UserNotDeletedException(BaseUserException):
 
 
 class UserAlreadyVerifiedException(BaseUserException):
+    pass
+
+
+class NewPasswordMatchWithOldException(BaseUserException):
     pass

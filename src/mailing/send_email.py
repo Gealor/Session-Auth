@@ -3,7 +3,8 @@ from email.mime.text import MIMEText
 
 import aiosmtplib
 
-from core.config import settings
+from src.core.config import settings
+from src.core.logger import log
 
 
 async def send_email(
@@ -16,6 +17,8 @@ async def send_email(
     message["From"] = settings.mailing.admin_email
     message["To"] = recepient
     message["Subject"] = subject
+
+    log.info("\n\tRecepient: %s\n\tSubject: %s", recepient, subject)
 
     plain_text_message = MIMEText(
         plain_content,
@@ -30,7 +33,7 @@ async def send_email(
             "utf-8",
         )
         message.attach(html_message)
-
+    log.info("Sending mail...")
     await aiosmtplib.send(
         message,
         hostname=settings.smtp.host,

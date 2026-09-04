@@ -1,30 +1,28 @@
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 
-from core.auth.security import get_current_user
-from core.config import settings
-from core.cookies import _clear_cookie, _set_cookie
-from core.database import db_session_getter
-from core.logger import log
-from core.redis_client import get_redis_client
-from mailing.send_verification_email import send_verification_email
-from schemas.exceptions.database import UniqueException
-from schemas.exceptions.email_verification import InvalidVerificationTokenException
-from schemas.exceptions.security import (
+from src.core.auth.security import get_current_user
+from src.core.config import settings
+from src.core.cookies import _clear_cookie, _set_cookie
+from src.core.logger import log
+from src.schemas.exceptions.database import UniqueException
+from src.schemas.exceptions.email_verification import InvalidVerificationTokenException
+from src.schemas.exceptions.security import (
     PasswordsNotMatchException,
     UserEmailAlreadyExistsException,
     UserNotActiveException,
 )
-from schemas.exceptions.users import UserAlreadyVerifiedException, UserNotFoundException
-from schemas.response_schemas import ResponseSchema
-from schemas.user_schemas import (
+from src.schemas.exceptions.users import UserAlreadyVerifiedException, UserNotFoundException
+from src.schemas.response_schemas import ResponseSchema
+from src.schemas.user_schemas import (
     LoginCredentials,
     UserRead,
     UserRegisterWithRepeatPassword,
 )
-from services.auth_service import AuthService
-from dependencies import get_user_service
-from services.email_verification import EmailVerificationService
-from services.user_service import UserService
+from src.services.auth_service import AuthService
+from src.dependencies import get_auth_service, get_email_verification_service, get_user_service
+from src.services.email_verification import EmailVerificationService
+from src.services.user_service import UserService
+from src.tasks.email_send_tasks import send_email_for_verification
 
 
 router = APIRouter(prefix="/auth", tags=["Session"])
@@ -33,10 +31,10 @@ router = APIRouter(prefix="/auth", tags=["Session"])
 @router.post("/register")
 async def create_user(
     user_data: UserRegisterWithRepeatPassword,
-    db=Depends(db_session_getter),
+    service: AuthService = Depends(get_auth_service),
 ) -> ResponseSchema: # Если схема не будет соответствовать результату, то fastapi выдаст ошибку валидации, т.к. аннотации в fastapi это не условность
     try:
-        result = await AuthService(db_session=db).register_user(user_data)
+        result = await service.register_user(user_data)
     except PasswordsNotMatchException:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match"
@@ -64,10 +62,10 @@ async def create_user(
 async def login_user(
     response: Response,
     credentials: LoginCredentials,
-    db=Depends(db_session_getter),
+    service: AuthService = Depends(get_auth_service),
 ) -> ResponseSchema:
     try:
-        token = await AuthService(db_session=db).login_user(
+        token = await service.login_user(
             email=credentials.email,
             password=credentials.password,
         )
@@ -98,10 +96,10 @@ async def login_user(
 async def logout(
     response: Response,
     current_user: UserRead = Depends(get_current_user),
-    db=Depends(db_session_getter),
+    service: AuthService = Depends(get_auth_service),
 ) -> ResponseSchema:
     try:
-        await AuthService(db_session=db).logout_user(user_id=current_user.id)
+        await service.logout_user(user_id=current_user.id)
     except Exception as e:
         log.error("Unexpected error: %s", e)
         raise HTTPException(
@@ -117,13 +115,12 @@ async def logout(
 
 @router.post("/send-verification-email", status_code=status.HTTP_202_ACCEPTED)
 async def generate_token_and_send_verification_email(
-    background_tasks: BackgroundTasks,
     current_user: UserRead = Depends(get_current_user),
-    redis = Depends(get_redis_client)
+    service: EmailVerificationService = Depends(get_email_verification_service),
 ):
-    
+
     try:
-        token = await EmailVerificationService(redis=redis).save_verification_token(
+        token = await service.save_verification_token(
             user_id=current_user.id,
             is_verified=current_user.is_verified,
         )
@@ -132,11 +129,7 @@ async def generate_token_and_send_verification_email(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already verified"
         )
-    background_tasks.add_task(
-        send_verification_email,
-        user=current_user,
-        verification_token=token,
-    )
+    await send_email_for_verification.kiq(user=current_user.model_dump(), verification_token=token)
 
     
 @router.post("/verify")
@@ -147,11 +140,13 @@ async def verify_user(
     try:
         await user_service.verify_user(token)
     except InvalidVerificationTokenException:
+        log.info("Invalid verification token: %s", token)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid verification token"
         )
     except UserAlreadyVerifiedException:
+        log.info("Email already verified")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already verified"

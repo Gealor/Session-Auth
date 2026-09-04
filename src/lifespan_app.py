@@ -3,21 +3,23 @@ import asyncio
 from redis.exceptions import ConnectionError as RedisConnectionError
 from sqlalchemy import text
 
-from schemas.exceptions.database import DatabaseStartupException
-from schemas.exceptions.redis import RedisStartupException
-from core.database import async_session_maker, engine
-from core.logger import log
-from core.redis_client import redis_client
+from src.core.taskiq_broker import broker
+from src.core.database import engine
+from src.schemas.exceptions.database import DatabaseStartupException
+from src.schemas.exceptions.redis import RedisStartupException
+from src.core.database import async_session_maker
+from src.core.logger import log
+from src.core.redis_client import redis_client
 
 
 class Lifespan:
     async def startup(self):
         """Проверить подключение к Redis и БД при запуске приложения"""
-        
         try:
             await asyncio.gather(
                 self._check_redis(),
-                self._check_database()
+                self._check_database(),
+                self._taskiq_broker_startup()
             )
         except (RedisStartupException, DatabaseStartupException):
             raise
@@ -28,7 +30,9 @@ class Lifespan:
             await asyncio.gather(
                 self._redis_close(),
                 self._engine_dispose(),
+                self._taskiq_broker_shutdown(),
             )
+
         except Exception as e:
             log.error("Unexpected error during Redis close: %s", e)
 
@@ -67,4 +71,14 @@ class Lifespan:
     
     async def _engine_dispose(self) -> None:
         await engine.dispose()
-        log.info("Engine successful disposed")
+        log.info("Engine successful disposed!")
+    
+    async def _taskiq_broker_startup(self) -> None:
+        if not broker.is_worker_process:
+            await broker.startup()
+        log.info("Broker successful started!")
+
+    async def _taskiq_broker_shutdown(self) -> None:
+        if not broker.is_worker_process:
+            await broker.shutdown()
+        log.info("Broker successful shutdown!")

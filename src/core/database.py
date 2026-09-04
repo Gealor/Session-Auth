@@ -12,7 +12,6 @@ async_session_maker = async_sessionmaker(
     bind=engine, expire_on_commit=False, autoflush=False
 )
 
-
 async def db_session_getter():
     async with async_session_maker() as session:
         yield session

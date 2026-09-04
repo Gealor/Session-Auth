@@ -1,14 +1,12 @@
-from redis.asyncio import Redis
-
-from core.auth.creation_tokens import create_token
-from repositories.redis.verification_token_repository import VerificationTokenRepository
-from schemas.exceptions.users import UserAlreadyVerifiedException
+from src.core.auth.creation_tokens import create_token
+from src.repositories.redis.verification_token_repository import VerificationTokenRepository
+from src.schemas.exceptions.users import UserAlreadyVerifiedException
 
 
 
 class EmailVerificationService:
-    def __init__(self, redis: Redis):
-        self.verification_token_repo = VerificationTokenRepository(redis=redis)
+    def __init__(self, verification_token_repo: VerificationTokenRepository):
+        self.verification_token_repo = verification_token_repo
 
     
     async def save_verification_token(

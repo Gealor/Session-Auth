@@ -1,14 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import Select, delete, select, update
+from dateutil.tz import UTC
+from sqlalchemy import Select, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
-from models.sessions import SessionToken
-from core.logger import log
-from schemas.exceptions.database import DatabaseException
-from schemas.exceptions.token import SessionTokenNotFoundException
+from src.models.sessions import SessionToken
+from src.core.logger import log
+from src.schemas.exceptions.database import DatabaseException
+from src.schemas.exceptions.token import SessionTokenNotFoundException
 
 
 class TokenRepository:
@@ -45,7 +46,7 @@ class TokenRepository:
 
         return record
 
-    async def create_record(self, user_id: int, token_hash: str, expired_at: datetime):
+    async def create_record(self, user_id: int, token_hash: str, expired_at: datetime) -> None:
         record = SessionToken(
             user_id=user_id,
             session_token=token_hash,
@@ -87,7 +88,7 @@ class TokenRepository:
         log.info("Update session token for user_id=%d", record.user_id)
         return record.session_token
 
-    async def delete_token(self, user_id: int):
+    async def delete_token(self, user_id: int) -> None:
         stmt = delete(SessionToken).where(SessionToken.user_id == user_id)
         await self.db_session.execute(stmt)
 
@@ -99,3 +100,23 @@ class TokenRepository:
             raise DatabaseException
 
         log.info("Deleted session token with user_id=%d", user_id)
+    
+    async def delete_expired_at_tokens(self) -> int:
+        now = datetime.now(tz=UTC)
+        stmt = (
+            delete(SessionToken)
+            .where(SessionToken.expired_at <= now)
+            .returning(SessionToken.session_token)
+        )
+
+        try:
+            result = await self.db_session.execute(stmt)
+            await self.db_session.commit()
+        except IntegrityError as e:
+            await self.db_session.rollback()
+            log.error("Failed to delete session token: %s", e)
+            raise DatabaseException
+        
+        count = len(result.all()) if result else 0
+        log.info("Deleted expired tokens. Count records: %d", count)
+        return count
