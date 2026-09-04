@@ -23,10 +23,9 @@ from src.schemas.user_schemas import (
 
 
 class AuthService:
-    def __init__(self, db_session):
-        self.db_session = db_session
-        self.user_repo = UserRepository(db_session=self.db_session)
-        self.token_repo = TokenRepository(db_session=self.db_session)
+    def __init__(self, user_repo: UserRepository, token_repo: TokenRepository):
+        self.user_repo = user_repo
+        self.token_repo = token_repo
 
     async def _save_session_token(self, user_id: int, token_hash: str):
         existing_token = await self.token_repo.get_token_by_user_id(user_id)

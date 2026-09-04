@@ -9,10 +9,15 @@ from src.schemas.user_schemas import UserRead, UserUpdate
 
 
 class UserService:
-    def __init__(self, db_session, redis):
-        self.db_session = db_session
-        self.user_repo = UserRepository(db_session=self.db_session)
-        self.verification_token_repo = VerificationTokenRepository(redis)
+    def __init__(
+        self, 
+        user_repo: UserRepository, 
+        verification_token_repo: VerificationTokenRepository,
+        token_repo: TokenRepository,
+    ):
+        self.user_repo = user_repo
+        self.verification_token_repo = verification_token_repo
+        self.token_repo = token_repo
 
     async def update_user(
         self, user_id: int, update_data: UserUpdate, exclude_inactive: bool = True
@@ -29,7 +34,7 @@ class UserService:
 
     async def delete_self_user(self, user_id: int) -> ResponseSchema:
         await self.user_repo.delete_user(user_id=user_id)
-        await TokenRepository(self.db_session).delete_token(user_id=user_id)
+        await self.token_repo.delete_token(user_id=user_id)
         return ResponseSchema(
             msg="Account successfully deleted. You have been logged out."
         )
