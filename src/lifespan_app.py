@@ -55,7 +55,7 @@ class Lifespan:
         """Проверить подключение к базе данных"""
         try:
             async with async_session_maker() as session:
-                result = await session.execute(text("SELECT 1"))
+                result = await session.scalar(text("SELECT 1"))
                 if result is None:
                     raise DatabaseStartupException("Database return empty result")
 
