@@ -23,6 +23,7 @@ from src.models.user import User
 from src.repositories.redis.verification_token_repository import VerificationTokenRepository
 from src.repositories.session_repository import TokenRepository
 from src.repositories.user_repository import UserRepository
+from src.services.auth_service import AuthService
 from src.services.user_service import UserService
 
 TEST_PASSWORD = "TestPassword123!"
@@ -224,3 +225,8 @@ def user_service(
         verification_token_repo=verification_token_repo,
         token_repo=token_repo,
     )
+
+
+@pytest.fixture()
+def auth_service(user_repo: UserRepository, token_repo: TokenRepository) -> AuthService:
+    return AuthService(user_repo=user_repo, token_repo=token_repo)
