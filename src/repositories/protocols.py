@@ -32,6 +32,7 @@ class UserRepo(Protocol):
         Returns:
             User | None: Пользователь или None, если не найден.
         """
+        ...
 
     async def get_user_by_email(
         self, email: str | EmailStr, exclude_inactive: bool = False
@@ -46,6 +47,7 @@ class UserRepo(Protocol):
         Returns:
             User | None: Пользователь или None, если не найден.
         """
+        ...
 
     async def create_user(self, user_data: UserRegister) -> None:
         """Создать пользователя.
@@ -53,6 +55,7 @@ class UserRepo(Protocol):
         Args:
             user_data (UserRegister): Данные пользователя с уже захэшированным паролем.
         """
+        ...
 
     async def update_user(
         self, user_id: int, update_data: UserUpdate, exclude_inactive: bool = False
@@ -68,6 +71,7 @@ class UserRepo(Protocol):
         Returns:
             User: Обновлённый пользователь.
         """
+        ...
 
     async def update_data_by_dict(
         self,
@@ -86,6 +90,7 @@ class UserRepo(Protocol):
         Returns:
             User | None: Обновлённый пользователь или None, если не найден.
         """
+        ...
 
     async def delete_user(self, user_id: int) -> None:
         """Мягко удалить пользователя.
@@ -93,6 +98,7 @@ class UserRepo(Protocol):
         Args:
             user_id (int): Идентификатор пользователя.
         """
+        ...
 
     async def restore_user(self, user_id: int) -> None:
         """Восстановить мягко удалённого пользователя.
@@ -100,6 +106,7 @@ class UserRepo(Protocol):
         Args:
             user_id (int): Идентификатор пользователя.
         """
+        ...
 
 
 class TokenRepo(Protocol):
@@ -116,6 +123,7 @@ class TokenRepo(Protocol):
         Returns:
             str | None: Хэш токена или None, если сессии нет.
         """
+        ...
 
     async def create_record(
         self, user_id: int, token_hash: str, expired_at: datetime
@@ -127,6 +135,7 @@ class TokenRepo(Protocol):
             token_hash (str): Хэш сессионного токена.
             expired_at (datetime): Момент истечения сессии.
         """
+        ...
 
     async def update_record(
         self, user_id: int, token: str, expired_at: datetime
@@ -141,6 +150,7 @@ class TokenRepo(Protocol):
         Returns:
             str: Сохранённый хэш токена.
         """
+        ...
 
     async def delete_token(self, user_id: int) -> None:
         """Удалить сессионный токен пользователя.
@@ -148,6 +158,7 @@ class TokenRepo(Protocol):
         Args:
             user_id (int): Идентификатор пользователя.
         """
+        ...
 
 
 class VerificationTokenRepo(Protocol):
@@ -158,6 +169,7 @@ class VerificationTokenRepo(Protocol):
             user_id (int): Идентификатор пользователя.
             token (str): Токен подтверждения.
         """
+        ...
 
     async def verify_and_consume_token(self, token: str) -> int:
         """Проверить токен подтверждения и удалить его.
@@ -171,3 +183,4 @@ class VerificationTokenRepo(Protocol):
         Returns:
             int: Идентификатор пользователя, которому принадлежал токен.
         """
+        ...
