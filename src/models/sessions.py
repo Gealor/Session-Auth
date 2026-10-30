@@ -14,7 +14,7 @@ class SessionToken(Base):
     __tablename__ = "session_tokens"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    session_token: Mapped[str] = mapped_column(nullable=False)
+    session_token: Mapped[str] = mapped_column(nullable=False, unique=True)
     expired_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
