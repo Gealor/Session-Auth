@@ -3,7 +3,6 @@ import uuid
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from datetime import datetime
 
-import bcrypt
 import pytest
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import (
@@ -14,15 +13,15 @@ from sqlalchemy.ext.asyncio import (
 )
 from testcontainers.postgres import PostgresContainer
 
+from src.core.auth.passwords import hash_password
 from src.models import Base
 from src.models.user import User
+from src.repositories.user_repository import UserRepository
 
 TEST_PASSWORD = "TestPassword123!"
-# hash_password из приложения асинхронный, на уровне модуля хэшируем напрямую через bcrypt
-TEST_PASSWORD_HASH = bcrypt.hashpw(
-    TEST_PASSWORD.encode("utf-8"),
-    bcrypt.gensalt()
-).decode("utf-8")
+# Хэшируем функцией приложения, чтобы хэш не разъехался с её форматом (пре-хэш и т.п.).
+# На уровне модуля цикла событий ещё нет, поэтому asyncio.run безопасен
+TEST_PASSWORD_HASH = asyncio.run(hash_password(TEST_PASSWORD)).decode("utf-8")
 
 
 @pytest.fixture(scope="session")
@@ -84,7 +83,9 @@ async def async_session(
 
 
 @pytest.fixture()
-def make_user(async_session: AsyncSession) -> Callable[..., Awaitable[User]]:
+def make_user(session_maker: async_sessionmaker[AsyncSession]) -> Callable[..., Awaitable[User]]:
+    # Своя сессия: подготовка данных не делит identity map с проверяемым кодом,
+    # и rollback внутри репозитория не протухает объекты, созданные в тесте
     async def _make_user(
         *,
         nickname: str | None = None,
@@ -103,10 +104,16 @@ def make_user(async_session: AsyncSession) -> Callable[..., Awaitable[User]]:
             is_verified=is_verified,
             deleted_at=deleted_at,
         )
-        async_session.add(user)
-        await async_session.commit()
-        await async_session.refresh(user)
+        async with session_maker() as session:
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
 
         return user
 
     return _make_user
+
+
+@pytest.fixture()
+def user_repo(async_session: AsyncSession) -> UserRepository:
+    return UserRepository(db_session=async_session)
