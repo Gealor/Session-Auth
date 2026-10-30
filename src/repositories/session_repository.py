@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Select, delete, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -130,20 +131,55 @@ class TokenRepository:
             .returning(SessionToken)
         )
 
-        record = await self.db_session.scalar(stmt)
-        if record is None:
-            raise SessionTokenNotFoundException
-
         try:
+            record = await self.db_session.scalar(stmt)
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
             log.error("Failed to update session_token: %s", e)
             raise DatabaseException
 
+        if record is None:
+            raise SessionTokenNotFoundException
+
         await self.db_session.refresh(record)
         log.info("Update session token for user_id=%d", record.user_id)
         return record.session_token
+
+    async def upsert_record(self, user_id: int, token_hash: str, expired_at: datetime) -> None:
+        """Создать сессию пользователя или заменить существующую одним атомарным запросом.
+
+        INSERT ... ON CONFLICT (user_id) DO UPDATE: Postgres сам решает, вставить строку
+        или обновить, поэтому параллельные входы одного пользователя не конфликтуют
+        (в отличие от связки «проверить наличие → create_record / update_record»).
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            token_hash (str): Хэш сессионного токена.
+            expired_at (datetime): Момент истечения сессии.
+
+        Raises:
+            DatabaseException: Ошибка целостности (пользователь не существует или
+                хэш уже принадлежит другой сессии).
+        """
+        stmt = (
+            insert(SessionToken)
+            .values(user_id=user_id, session_token=token_hash, expired_at=expired_at)
+            .on_conflict_do_update(
+                index_elements=[SessionToken.user_id],
+                set_={"session_token": token_hash, "expired_at": expired_at},
+            )
+        )
+
+        try:
+            await self.db_session.execute(stmt)
+            await self.db_session.commit()
+        except IntegrityError as e:
+            await self.db_session.rollback()
+            log.error("Failed to upsert session_token: %s", e)
+            raise DatabaseException
+
+        log.info("Upsert session token for user_id=%d", user_id)
 
     async def delete_token(self, user_id: int) -> None:
         """Удалить сессионный токен пользователя.

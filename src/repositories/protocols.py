@@ -152,6 +152,18 @@ class TokenRepo(Protocol):
         """
         ...
 
+    async def upsert_record(
+        self, user_id: int, token_hash: str, expired_at: datetime
+    ) -> None:
+        """Создать сессию пользователя или атомарно заменить существующую.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            token_hash (str): Хэш сессионного токена.
+            expired_at (datetime): Момент истечения сессии.
+        """
+        ...
+
     async def delete_token(self, user_id: int) -> None:
         """Удалить сессионный токен пользователя.
 

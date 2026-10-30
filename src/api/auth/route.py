@@ -117,7 +117,7 @@ async def login_user(
         response=response,
     )
     return ResponseSchema(
-        msg = "Succesful login!",
+        msg = "Successful login!",
     )
 
 
