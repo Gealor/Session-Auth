@@ -1,10 +1,7 @@
-from collections.abc import Awaitable, Callable
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.core.date_now import get_current_datetime
-from src.models.user import User
 from src.repositories.user_repository import UserRepository
 from src.schemas.exceptions.database import UniqueException
 from src.schemas.exceptions.users import UserNotFoundException
@@ -12,19 +9,6 @@ from src.schemas.user_schemas import UserRegister, UserUpdate
 from tests.conftest import TEST_PASSWORD_HASH
 
 MISSING_ID = 999_999
-
-
-@pytest.fixture()
-def read_user(
-    session_maker: async_sessionmaker[AsyncSession],
-) -> Callable[[int], Awaitable[User | None]]:
-    """Прочитать пользователя из отдельной сессии — то, что реально закоммичено в БД."""
-
-    async def _read_user(user_id: int) -> User | None:
-        async with session_maker() as session:
-            return await session.get(User, user_id)
-
-    return _read_user
 
 
 def _register_data(

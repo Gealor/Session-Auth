@@ -16,19 +16,6 @@ MISSING_ID = 999_999
 
 
 @pytest.fixture()
-def read_token(
-    session_maker: async_sessionmaker[AsyncSession],
-) -> Callable[[int], Awaitable[SessionToken | None]]:
-    """Прочитать сессию пользователя из отдельной сессии БД — то, что реально закоммичено."""
-
-    async def _read_token(user_id: int) -> SessionToken | None:
-        async with session_maker() as session:
-            return await session.get(SessionToken, user_id)
-
-    return _read_token
-
-
-@pytest.fixture()
 def count_tokens(
     session_maker: async_sessionmaker[AsyncSession],
 ) -> Callable[[], Awaitable[int]]:

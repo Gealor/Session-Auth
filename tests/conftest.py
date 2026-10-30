@@ -23,6 +23,7 @@ from src.models.user import User
 from src.repositories.redis.verification_token_repository import VerificationTokenRepository
 from src.repositories.session_repository import TokenRepository
 from src.repositories.user_repository import UserRepository
+from src.services.user_service import UserService
 
 TEST_PASSWORD = "TestPassword123!"
 # Хэшируем функцией приложения, чтобы хэш не разъехался с её форматом (пре-хэш и т.п.).
@@ -146,6 +147,32 @@ def make_session_token(
 
 
 @pytest.fixture()
+def read_user(
+    session_maker: async_sessionmaker[AsyncSession],
+) -> Callable[[int], Awaitable[User | None]]:
+    """Прочитать пользователя из отдельной сессии — то, что реально закоммичено в БД."""
+
+    async def _read_user(user_id: int) -> User | None:
+        async with session_maker() as session:
+            return await session.get(User, user_id)
+
+    return _read_user
+
+
+@pytest.fixture()
+def read_token(
+    session_maker: async_sessionmaker[AsyncSession],
+) -> Callable[[int], Awaitable[SessionToken | None]]:
+    """Прочитать сессию пользователя из отдельной сессии БД — то, что реально закоммичено."""
+
+    async def _read_token(user_id: int) -> SessionToken | None:
+        async with session_maker() as session:
+            return await session.get(SessionToken, user_id)
+
+    return _read_token
+
+
+@pytest.fixture()
 def user_repo(async_session: AsyncSession) -> UserRepository:
     return UserRepository(db_session=async_session)
 
@@ -181,3 +208,19 @@ async def redis_client(redis_container: RedisContainer) -> AsyncGenerator[Redis,
 @pytest.fixture()
 def verification_token_repo(redis_client: Redis) -> VerificationTokenRepository:
     return VerificationTokenRepository(redis=redis_client)
+
+
+# -------------------------------------------------------------------------- services
+
+
+@pytest.fixture()
+def user_service(
+    user_repo: UserRepository,
+    token_repo: TokenRepository,
+    verification_token_repo: VerificationTokenRepository,
+) -> UserService:
+    return UserService(
+        user_repo=user_repo,
+        verification_token_repo=verification_token_repo,
+        token_repo=token_repo,
+    )
