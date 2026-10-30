@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 
@@ -329,6 +330,122 @@ async def test_update_record_without_session_raises_not_found(
         await token_repo.update_record(user.id, "new", _in(timedelta(days=1)))
 
     assert await count_tokens() == 0
+
+
+# ---------------------------------------------------------------------- upsert_record
+
+
+async def test_upsert_creates_session_when_none_exists(
+    token_repo: TokenRepository,
+    make_user,
+    read_token,
+):
+    user = await make_user()
+    expired_at = _in(timedelta(days=1))
+
+    await token_repo.upsert_record(user.id, "hash-1", expired_at)
+
+    persisted = await read_token(user.id)
+    assert persisted.session_token == "hash-1"
+    assert persisted.expired_at == expired_at
+
+
+async def test_upsert_replaces_existing_session(
+    token_repo: TokenRepository,
+    make_user,
+    make_session_token,
+    read_token,
+    count_tokens,
+):
+    user = await make_user()
+    await make_session_token(user_id=user.id, token_hash="old", expired_at=_in(timedelta(hours=1)))
+    new_expired_at = _in(timedelta(days=1))
+
+    await token_repo.upsert_record(user.id, "new", new_expired_at)
+
+    persisted = await read_token(user.id)
+    assert persisted.session_token == "new"
+    assert persisted.expired_at == new_expired_at
+    assert await token_repo.get_token_by_hash("old") is None
+    assert await count_tokens() == 1
+
+
+async def test_upsert_does_not_touch_other_users(
+    token_repo: TokenRepository,
+    make_user,
+    make_session_token,
+    read_token,
+):
+    user = await make_user()
+    other = await make_user()
+    await make_session_token(user_id=other.id, token_hash="other")
+
+    await token_repo.upsert_record(user.id, "mine", _in(timedelta(days=1)))
+
+    assert (await read_token(other.id)).session_token == "other"
+
+
+async def test_upsert_for_missing_user_raises(
+    token_repo: TokenRepository,
+    count_tokens,
+):
+    with pytest.raises(DatabaseException):
+        await token_repo.upsert_record(MISSING_ID, "hash-1", _in(timedelta(days=1)))
+
+    assert await count_tokens() == 0
+
+
+async def test_upsert_with_hash_of_other_user_raises(
+    token_repo: TokenRepository,
+    make_user,
+    make_session_token,
+    read_token,
+):
+    user = await make_user()
+    other = await make_user()
+    await make_session_token(user_id=user.id, token_hash="mine")
+    await make_session_token(user_id=other.id, token_hash="taken")
+
+    with pytest.raises(DatabaseException):
+        await token_repo.upsert_record(user.id, "taken", _in(timedelta(days=1)))
+
+    assert (await read_token(user.id)).session_token == "mine"
+    assert (await read_token(other.id)).session_token == "taken"
+
+
+async def test_repository_is_usable_after_failed_upsert(
+    token_repo: TokenRepository,
+    make_user,
+    read_token,
+):
+    user = await make_user()
+    with pytest.raises(DatabaseException):
+        await token_repo.upsert_record(MISSING_ID, "hash-1", _in(timedelta(days=1)))
+
+    await token_repo.upsert_record(user.id, "hash-2", _in(timedelta(days=1)))
+
+    assert (await read_token(user.id)).session_token == "hash-2"
+
+
+async def test_concurrent_upserts_for_same_user_leave_one_session(
+    make_user,
+    session_maker: async_sessionmaker[AsyncSession],
+    read_token,
+    count_tokens,
+):
+    # В приложении у каждого запроса своя сессия БД
+    user = await make_user()
+
+    async def upsert(token_hash: str) -> None:
+        async with session_maker() as session:
+            await TokenRepository(db_session=session).upsert_record(
+                user.id, token_hash, _in(timedelta(days=1))
+            )
+
+    await asyncio.gather(*(upsert(f"hash-{i}") for i in range(10)))
+
+    assert await count_tokens() == 1
+    assert (await read_token(user.id)).session_token.startswith("hash-")
 
 
 # ----------------------------------------------------------------------- delete_token
