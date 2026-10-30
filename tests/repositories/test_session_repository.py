@@ -138,7 +138,7 @@ async def test_get_returns_expired_session(
 @pytest.mark.parametrize(
     "state",
     [
-        pytest.param({"is_active": False}, id="blocked"),
+        pytest.param({"is_active": False}, id="inactive-without-deleted-at"),
         pytest.param({"is_active": False, "deleted_at": get_current_datetime()}, id="deleted"),
     ],
 )
