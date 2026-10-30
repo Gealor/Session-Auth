@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from dateutil.tz import UTC
-from sqlalchemy import Select, delete, func, select, update
+from sqlalchemy import Select, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
+from src.core.date_now import get_current_datetime
 from src.models.sessions import SessionToken
 from src.core.logger import log
 from src.schemas.exceptions.database import DatabaseException
@@ -175,7 +175,7 @@ class TokenRepository:
         Returns:
             int: Количество удалённых записей.
         """
-        now = datetime.now(tz=UTC)
+        now = get_current_datetime()
         stmt = (
             delete(SessionToken)
             .where(SessionToken.expired_at <= now)

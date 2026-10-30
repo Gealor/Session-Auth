@@ -1,8 +1,8 @@
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from pydantic import EmailStr
 
+from src.core.date_now import get_current_datetime
 from src.core.config import settings
 from src.core.auth.creation_tokens import create_token
 from src.core.auth.passwords import compare_hashed_passwords, hash_password
@@ -43,7 +43,7 @@ class AuthService:
             token_hash (str): SHA-256 хэш сессионного токена.
         """
         existing_token = await self.token_repo.get_token_by_user_id(user_id)
-        expired_at = datetime.now() + relativedelta(
+        expired_at = get_current_datetime() + relativedelta(
             minutes=settings.auth.session_id_expire_minutes
         )
         if existing_token:

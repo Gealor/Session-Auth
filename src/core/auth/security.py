@@ -1,9 +1,8 @@
-from datetime import UTC, datetime
-
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.date_now import get_current_datetime
 from src.core.auth.creation_tokens import hash_token
 from src.core.cookies import _get_value_from_cookie
 from src.core.logger import log
@@ -71,7 +70,7 @@ async def get_current_user(
         token_record.expired_at,
     )
 
-    current_datetime = datetime.now(UTC)
+    current_datetime = get_current_datetime()
     if current_datetime >= token_record.expired_at:
         log.error("Session token expired")
         raise HTTPException(
