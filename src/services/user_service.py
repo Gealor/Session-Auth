@@ -1,8 +1,6 @@
 from src.core.auth.passwords import compare_hashed_passwords, hash_password
 from src.core.logger import log
-from src.repositories.redis.verification_token_repository import VerificationTokenRepository
-from src.repositories.session_repository import TokenRepository
-from src.repositories.user_repository import UserRepository
+from src.repositories.protocols import TokenRepo, UserRepo, VerificationTokenRepo
 from src.schemas.exceptions.users import NewPasswordMatchWithOldException, UserAlreadyVerifiedException, UserNotDeletedException, UserNotFoundException
 from src.schemas.response_schemas import ResponseSchema
 from src.schemas.user_schemas import UserRead, UserUpdate
@@ -11,9 +9,9 @@ from src.schemas.user_schemas import UserRead, UserUpdate
 class UserService:
     def __init__(
         self, 
-        user_repo: UserRepository, 
-        verification_token_repo: VerificationTokenRepository,
-        token_repo: TokenRepository,
+        user_repo: UserRepo,
+        verification_token_repo: VerificationTokenRepo,
+        token_repo: TokenRepo,
     ):
         self.user_repo = user_repo
         self.verification_token_repo = verification_token_repo

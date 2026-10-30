@@ -1,11 +1,11 @@
 from src.core.auth.creation_tokens import create_token
-from src.repositories.redis.verification_token_repository import VerificationTokenRepository
+from src.repositories.protocols import VerificationTokenRepo
 from src.schemas.exceptions.users import UserAlreadyVerifiedException
 
 
 
 class EmailVerificationService:
-    def __init__(self, verification_token_repo: VerificationTokenRepository):
+    def __init__(self, verification_token_repo: VerificationTokenRepo):
         self.verification_token_repo = verification_token_repo
 
     
