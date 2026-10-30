@@ -29,17 +29,20 @@ async def hash_password(
 
 
 async def compare_hashed_passwords(
-    entered_password: bytes,
+    entered_password: str | bytes,
     hashed_password: bytes,
 ) -> bool:
     """Проверить пароль на соответствие bcrypt-хэшу в отдельном потоке.
 
     Args:
-        entered_password (bytes): Введённый пароль в кодировке UTF-8.
+        entered_password (bytes | str): Введённый пароль в кодировке UTF-8, либо в строке
         hashed_password (bytes): Сохранённый bcrypt-хэш.
 
     Returns:
         bool: True, если пароль совпадает с хэшем.
     """
+    if isinstance(entered_password, str):
+        entered_password = entered_password.encode("utf-8")
+
     entered_password_hash = _prehash(entered_password)
     return await asyncio.to_thread(bcrypt.checkpw, entered_password_hash, hashed_password)
