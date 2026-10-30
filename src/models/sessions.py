@@ -24,4 +24,5 @@ class SessionToken(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "session_token", name="id_token_uq"),
+        UniqueConstraint("session_token", name="uq_session_token")
     )
