@@ -7,8 +7,7 @@ from src.core.config import settings
 from src.core.auth.creation_tokens import create_token
 from src.core.auth.passwords import compare_hashed_passwords, hash_password
 from src.core.logger import log
-from src.repositories.session_repository import TokenRepository
-from src.repositories.user_repository import UserRepository
+from src.repositories.protocols import TokenRepo, UserRepo
 from src.schemas.exceptions.security import (
     PasswordsNotMatchException,
     UserEmailAlreadyExistsException,
@@ -23,7 +22,7 @@ from src.schemas.user_schemas import (
 
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository, token_repo: TokenRepository):
+    def __init__(self, user_repo: UserRepo, token_repo: TokenRepo):
         self.user_repo = user_repo
         self.token_repo = token_repo
 
