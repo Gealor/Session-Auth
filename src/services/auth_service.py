@@ -23,10 +23,25 @@ from src.schemas.user_schemas import (
 
 class AuthService:
     def __init__(self, user_repo: UserRepo, token_repo: TokenRepo):
+        """Инициализировать сервис аутентификации.
+
+        Args:
+            user_repo (UserRepo): Репозиторий пользователей.
+            token_repo (TokenRepo): Репозиторий сессионных токенов.
+        """
         self.user_repo = user_repo
         self.token_repo = token_repo
 
     async def _save_session_token(self, user_id: int, token_hash: str):
+        """Сохранить хэш сессионного токена пользователя.
+
+        Если у пользователя уже есть сессия, запись обновляется новым хэшем и сроком
+        действия, иначе создаётся новая запись.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            token_hash (str): SHA-256 хэш сессионного токена.
+        """
         existing_token = await self.token_repo.get_token_by_user_id(user_id)
         expired_at = datetime.now() + relativedelta(
             minutes=settings.auth.session_id_expire_minutes
@@ -40,6 +55,23 @@ class AuthService:
         self,
         user_data: UserRegisterWithRepeatPassword,
     ) -> ResponseSchema:
+        """Зарегистрировать нового пользователя.
+
+        Проверяет совпадение пароля и его повтора, уникальность email, хэширует
+        пароль и сохраняет пользователя в БД.
+
+        Args:
+            user_data (UserRegisterWithRepeatPassword): Данные для регистрации
+                с повтором пароля.
+
+        Raises:
+            PasswordsNotMatchException: Пароль и его повтор не совпадают.
+            UserEmailAlreadyExistsException: Пользователь с таким email уже существует.
+            UniqueException: Нарушено ограничение уникальности (например, nickname).
+
+        Returns:
+            ResponseSchema: Сообщение об успешной регистрации.
+        """
         if user_data.password != user_data.repeat_password:
             log.error(
                 "Password and repeat password do not match: %s != %s",
@@ -62,6 +94,23 @@ class AuthService:
         return ResponseSchema(msg="Succesful registration. Now you can log in.")
 
     async def login_user(self, email: EmailStr, password: str) -> str:
+        """Аутентифицировать пользователя и создать сессию.
+
+        Проверяет email и пароль, активность аккаунта, генерирует сессионный токен
+        и сохраняет его хэш в БД.
+
+        Args:
+            email (EmailStr): Email пользователя.
+            password (str): Пароль в открытом виде.
+
+        Raises:
+            UserNotFoundException: Пользователь с таким email не найден.
+            PasswordsNotMatchException: Неверный пароль.
+            UserNotActiveException: Аккаунт удалён или заблокирован.
+
+        Returns:
+            str: Сессионный токен в открытом виде (для записи в cookie).
+        """
         user = await self.user_repo.get_user_by_email(email=email)
         if not user:
             log.error("User by email %s not found", email)
@@ -91,5 +140,10 @@ class AuthService:
         return token
 
     async def logout_user(self, user_id: int):
+        """Завершить сессию пользователя, удалив его сессионный токен.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+        """
         await self.token_repo.delete_token(user_id)
         log.info("User id=%d logged out, session token deleted", user_id)

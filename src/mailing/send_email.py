@@ -13,6 +13,14 @@ async def send_email(
     plain_content: str,
     html_content: str | None = None,
 ):
+    """Отправить письмо через SMTP.
+
+    Args:
+        recepient (str): Email получателя.
+        subject (str): Тема письма.
+        plain_content (str): Текстовая версия письма.
+        html_content (str | None, optional): HTML-версия письма. Defaults to None.
+    """
     message = MIMEMultipart("alternative")
     message["From"] = settings.mailing.admin_email
     message["To"] = recepient

@@ -8,10 +8,24 @@ from src.schemas.exceptions.email_verification import InvalidVerificationTokenEx
 
 class VerificationTokenRepository:
     def __init__(self, redis: Redis):
+        """Инициализировать репозиторий токенов подтверждения email.
+
+        Args:
+            redis (Redis): Асинхронный клиент Redis.
+        """
         self.redis = redis
 
 
     async def save_verification_token(self, user_id: int, token: str) -> None:
+        """Сохранить токен подтверждения email, заменив предыдущий.
+
+        Хранит две связанные записи с одинаковым TTL: токен -> user_id и
+        user_id -> токен. Старый токен пользователя, если он есть, удаляется.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            token (str): Токен подтверждения.
+        """
         user_prefix = settings.mailing.user_prefix
         token_prefix = settings.mailing.token_prefix
         
@@ -32,6 +46,21 @@ class VerificationTokenRepository:
 
     
     async def verify_and_consume_token(self, token: str) -> int:
+        """Проверить токен подтверждения и атомарно удалить его.
+
+        Использует WATCH/MULTI, чтобы токен нельзя было использовать дважды
+        при конкурентных запросах.
+
+        Args:
+            token (str): Токен подтверждения.
+
+        Raises:
+            InvalidVerificationTokenException: Токен не найден, истёк или был
+                изменён другим запросом во время проверки.
+
+        Returns:
+            int: Идентификатор пользователя, которому принадлежал токен.
+        """
         token_key = f"{settings.mailing.token_prefix}:{token}"
 
         async with self.redis.pipeline(transaction=True) as pipe:

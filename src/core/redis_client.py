@@ -8,4 +8,9 @@ redis_client: Redis = Redis(
 )
 
 def get_redis_client() -> Redis:
+    """Зависимость: вернуть общий асинхронный клиент Redis.
+
+    Returns:
+        Redis: Клиент Redis приложения.
+    """
     return redis_client

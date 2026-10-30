@@ -32,6 +32,11 @@ class AuthSettings(BaseModel):
 
     @property
     def session_id_expire_minutes(self):
+        """Время жизни сессии в минутах.
+
+        Returns:
+            int: session_id_expire_days, переведённое в минуты.
+        """
         return 24 * 60 * self.session_id_expire_days
     
 
@@ -50,6 +55,11 @@ class RabbitMQSettings(BaseSettings):
 
     @property
     def rabbitmq_url(self):
+        """URL подключения к RabbitMQ.
+
+        Returns:
+            str: URL вида amqp://user:password@host:port.
+        """
         return (
             f"{self.rabbit_protocol}://{self.rabbit_user}:{self.rabbit_password}@" \
             f"{self.rabbit_host}:{self.rabbit_port}"
@@ -86,6 +96,11 @@ class DatabaseSettings(BaseSettings):
 
     @property
     def db_url(self):
+        """URL подключения к PostgreSQL через asyncpg.
+
+        Returns:
+            str: URL вида postgresql+asyncpg://user:password@host:port/db.
+        """
         return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
     
 class RedisSettings(BaseSettings):
@@ -102,6 +117,11 @@ class RedisSettings(BaseSettings):
 
     @property
     def redis_url(self):
+        """URL подключения к Redis.
+
+        Returns:
+            str: URL вида redis://host:port.
+        """
         return f"redis://{self.host}:{self.port}"
 
 
@@ -122,14 +142,29 @@ class MailingSettings(BaseModel):
 
     @property
     def ttl_seconds(self):
+        """Время жизни токена подтверждения email в секундах.
+
+        Returns:
+            int: ttl_minutes, переведённое в секунды.
+        """
         return self.ttl_minutes * 60
     
     @property
     def user_prefix(self):
+        """Префикс Redis-ключей вида user_id -> токен.
+
+        Returns:
+            str: Префикс вида "<prefix>:user".
+        """
         return f"{self.prefix}:user"
     
     @property
     def token_prefix(self):
+        """Префикс Redis-ключей вида токен -> user_id.
+
+        Returns:
+            str: Префикс вида "<prefix>:token".
+        """
         return f"{self.prefix}:token"
 
 

@@ -17,6 +17,16 @@ async def send_email_for_verification(
     user: dict[str, Any],
     verification_token: str
 ):
+    """Задача TaskIQ: отправить пользователю письмо для подтверждения email.
+
+    Args:
+        user (dict[str, Any]): Сериализованные данные пользователя (UserRead).
+        verification_token (str): Токен подтверждения.
+
+    Raises:
+        SMTPConnectError: Не удалось подключиться к SMTP-серверу (задача
+            будет повторена).
+    """
     user_model = UserRead.model_validate(user)
     try:
         await send_verification_email(user_model, verification_token)

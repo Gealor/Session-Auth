@@ -15,6 +15,14 @@ from src.schemas.user_schemas import UserRead
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 async def _get_session_from_cookie(request: Request):
+    """Достать сессионный токен из cookie запроса.
+
+    Args:
+        request (Request): Входящий HTTP-запрос.
+
+    Returns:
+        str | None: Сессионный токен или None, если cookie не установлена.
+    """
     return _get_value_from_cookie(settings.auth.session_id_cookie_name, request)
 
 
@@ -23,6 +31,22 @@ async def get_current_user(
     db: AsyncSession = Depends(db_session_getter),
     _swagger_doc: str | None = Depends(oauth2_scheme),
 ) -> UserRead:
+    """FastAPI-зависимость: получить текущего пользователя по сессионной cookie.
+
+    Args:
+        token (str, optional): Сессионный токен из cookie.
+            Defaults to Depends(_get_session_from_cookie).
+        db (AsyncSession, optional): Сессия БД. Defaults to Depends(db_session_getter).
+        _swagger_doc (str | None, optional): Используется только для кнопки
+            авторизации в Swagger. Defaults to Depends(oauth2_scheme).
+
+    Raises:
+        HTTPException: 401, если токен не передан, не найден, истёк, либо
+            пользователь неактивен.
+
+    Returns:
+        UserRead: Текущий пользователь.
+    """
     if not token:
         log.error("Session token user not found: %s", token)
         raise HTTPException(

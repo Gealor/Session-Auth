@@ -33,6 +33,20 @@ async def create_user(
     user_data: UserRegisterWithRepeatPassword,
     service: AuthService = Depends(get_auth_service),
 ) -> ResponseSchema: # Если схема не будет соответствовать результату, то fastapi выдаст ошибку валидации, т.к. аннотации в fastapi это не условность
+    """Зарегистрировать нового пользователя.
+
+    Args:
+        user_data (UserRegisterWithRepeatPassword): Данные для регистрации.
+        service (AuthService, optional): Сервис аутентификации.
+            Defaults to Depends(get_auth_service).
+
+    Raises:
+        HTTPException: 400 — пароли не совпадают или email/nickname заняты;
+            500 — непредвиденная ошибка.
+
+    Returns:
+        ResponseSchema: Сообщение об успешной регистрации.
+    """
     try:
         result = await service.register_user(user_data)
     except PasswordsNotMatchException:
@@ -64,6 +78,21 @@ async def login_user(
     credentials: LoginCredentials,
     service: AuthService = Depends(get_auth_service),
 ) -> ResponseSchema:
+    """Войти в аккаунт и установить сессионную cookie.
+
+    Args:
+        response (Response): HTTP-ответ для установки cookie.
+        credentials (LoginCredentials): Email и пароль.
+        service (AuthService, optional): Сервис аутентификации.
+            Defaults to Depends(get_auth_service).
+
+    Raises:
+        HTTPException: 401 — неверный email или пароль; 403 — аккаунт удалён
+            или заблокирован; 500 — непредвиденная ошибка.
+
+    Returns:
+        ResponseSchema: Сообщение об успешном входе.
+    """
     try:
         token = await service.login_user(
             email=credentials.email,
@@ -98,6 +127,21 @@ async def logout(
     current_user: UserRead = Depends(get_current_user),
     service: AuthService = Depends(get_auth_service),
 ) -> ResponseSchema:
+    """Выйти из аккаунта: удалить сессию и сессионную cookie.
+
+    Args:
+        response (Response): HTTP-ответ для удаления cookie.
+        current_user (UserRead, optional): Текущий пользователь.
+            Defaults to Depends(get_current_user).
+        service (AuthService, optional): Сервис аутентификации.
+            Defaults to Depends(get_auth_service).
+
+    Raises:
+        HTTPException: 500 — непредвиденная ошибка.
+
+    Returns:
+        ResponseSchema: Сообщение об успешном выходе.
+    """
     try:
         await service.logout_user(user_id=current_user.id)
     except Exception as e:
@@ -118,6 +162,17 @@ async def generate_token_and_send_verification_email(
     current_user: UserRead = Depends(get_current_user),
     service: EmailVerificationService = Depends(get_email_verification_service),
 ):
+    """Создать токен подтверждения и поставить в очередь отправку письма.
+
+    Args:
+        current_user (UserRead, optional): Текущий пользователь.
+            Defaults to Depends(get_current_user).
+        service (EmailVerificationService, optional): Сервис подтверждения email.
+            Defaults to Depends(get_email_verification_service).
+
+    Raises:
+        HTTPException: 400 — email уже подтверждён.
+    """
 
     try:
         token = await service.save_verification_token(
@@ -137,6 +192,17 @@ async def verify_user(
     token: str = Body(embed=True),
     user_service: UserService = Depends(get_user_service)
 ):
+    """Подтвердить email пользователя по токену из письма.
+
+    Args:
+        token (str, optional): Токен подтверждения. Defaults to Body(embed=True).
+        user_service (UserService, optional): Сервис пользователей.
+            Defaults to Depends(get_user_service).
+
+    Raises:
+        HTTPException: 400 — токен недействителен или email уже подтверждён;
+            404 — пользователь не найден.
+    """
     try:
         await user_service.verify_user(token)
     except InvalidVerificationTokenException:

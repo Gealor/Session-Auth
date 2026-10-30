@@ -13,6 +13,14 @@ lifespan_app = Lifespan()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Жизненный цикл FastAPI-приложения: инициализация при старте и очистка при остановке.
+
+    Args:
+        app (FastAPI): Экземпляр приложения.
+
+    Yields:
+        None: Управление приложению на время его работы.
+    """
     await lifespan_app.startup()
     log_uvicorn.info("Start application!")
     yield

@@ -14,7 +14,12 @@ from src.core.redis_client import redis_client
 
 class Lifespan:
     async def startup(self):
-        """Проверить подключение к Redis и БД при запуске приложения"""
+        """Проверить подключение к Redis и БД и запустить брокер при старте приложения.
+
+        Raises:
+            RedisStartupException: Не удалось подключиться к Redis.
+            DatabaseStartupException: Не удалось подключиться к БД.
+        """
         try:
             await asyncio.gather(
                 self._check_redis(),
@@ -25,7 +30,7 @@ class Lifespan:
             raise
 
     async def shutdown(self):
-        """Закрыть соединения при завершении приложения"""
+        """Закрыть соединения с Redis, БД и брокером при завершении приложения."""
         try:
             await asyncio.gather(
                 self._redis_close(),
@@ -38,7 +43,11 @@ class Lifespan:
 
 
     async def _check_redis(self) -> None:
-        """Проверить подключение к Redis"""
+        """Проверить подключение к Redis командой PING.
+
+        Raises:
+            RedisStartupException: Redis недоступен или вернул неожиданный ответ.
+        """
         try:
             pong = await redis_client.ping() # type: ignore
             if not pong:
@@ -52,7 +61,11 @@ class Lifespan:
             raise RedisStartupException(f"Unexpected error during connection to Redis: {e}") from e
 
     async def _check_database(self) -> None:
-        """Проверить подключение к базе данных"""
+        """Проверить подключение к базе данных запросом SELECT 1.
+
+        Raises:
+            DatabaseStartupException: БД недоступна или вернула пустой результат.
+        """
         try:
             async with async_session_maker() as session:
                 result = await session.execute(text("SELECT 1"))
@@ -66,19 +79,23 @@ class Lifespan:
             raise DatabaseStartupException(f"Unexpected error during connection to database: {e}") from e
     
     async def _redis_close(self) -> None:
+        """Закрыть соединение с Redis."""
         await redis_client.aclose()
         log.info("Redis successful closed")
     
     async def _engine_dispose(self) -> None:
+        """Закрыть пул соединений SQLAlchemy."""
         await engine.dispose()
         log.info("Engine successful disposed!")
     
     async def _taskiq_broker_startup(self) -> None:
+        """Запустить брокер TaskIQ (только в процессе приложения, не в воркере)."""
         if not broker.is_worker_process:
             await broker.startup()
         log.info("Broker successful started!")
 
     async def _taskiq_broker_shutdown(self) -> None:
+        """Остановить брокер TaskIQ (только в процессе приложения, не в воркере)."""
         if not broker.is_worker_process:
             await broker.shutdown()
         log.info("Broker successful shutdown!")
