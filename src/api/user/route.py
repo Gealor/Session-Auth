@@ -17,6 +17,15 @@ router = APIRouter(prefix="/user")
 async def read_me(
     current_user: UserRead = Depends(get_current_user),
 ) -> UserRead:
+    """Получить данные текущего пользователя.
+
+    Args:
+        current_user (UserRead, optional): Текущий пользователь.
+            Defaults to Depends(get_current_user).
+
+    Returns:
+        UserRead: Данные текущего пользователя.
+    """
     await log_action.kiq(current_user.id)
     return UserRead.model_validate(current_user)
 
@@ -27,6 +36,22 @@ async def update_my_profile(
     current_user: UserRead = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ) -> UserRead:
+    """Обновить профиль текущего пользователя.
+
+    Args:
+        update_data (UserUpdate): Новые значения полей.
+        current_user (UserRead, optional): Текущий пользователь.
+            Defaults to Depends(get_current_user).
+        user_service (UserService, optional): Сервис пользователей.
+            Defaults to Depends(get_user_service).
+
+    Raises:
+        HTTPException: 404 — пользователь не найден; 400 — значение уже занято;
+            500 — непредвиденная ошибка.
+
+    Returns:
+        UserRead: Обновлённые данные пользователя.
+    """
     try:
         result = await user_service.update_user(
             user_id=current_user.id, update_data=update_data
@@ -54,6 +79,20 @@ async def delete_my_account(
     current_user: UserRead = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ) -> ResponseSchema:
+    """Мягко удалить аккаунт текущего пользователя и завершить его сессию.
+
+    Args:
+        current_user (UserRead, optional): Текущий пользователь.
+            Defaults to Depends(get_current_user).
+        user_service (UserService, optional): Сервис пользователей.
+            Defaults to Depends(get_user_service).
+
+    Raises:
+        HTTPException: 500 — непредвиденная ошибка.
+
+    Returns:
+        ResponseSchema: Сообщение об успешном удалении.
+    """
     try:
         result = await user_service.delete_self_user(
             user_id=current_user.id
@@ -72,6 +111,20 @@ async def restore_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
 ) -> ResponseSchema:
+    """Восстановить мягко удалённого пользователя.
+
+    Args:
+        user_id (int): Идентификатор пользователя.
+        user_service (UserService, optional): Сервис пользователей.
+            Defaults to Depends(get_user_service).
+
+    Raises:
+        HTTPException: 404 — пользователь не найден; 400 — пользователь
+            не удалён; 500 — непредвиденная ошибка.
+
+    Returns:
+        ResponseSchema: Сообщение об успешном восстановлении.
+    """
     try:
         result = await user_service.restore_deleted_user(user_id=user_id)
     except UserNotFoundException:
@@ -96,6 +149,21 @@ async def update_user_password_by_id(
     new_password: str = Body(embed=True),
     user_service: UserService = Depends(get_user_service),
 ) -> ResponseSchema:
+    """Сменить пароль пользователя по идентификатору.
+
+    Args:
+        user_id (int, optional): Идентификатор пользователя. Defaults to Query().
+        new_password (str, optional): Новый пароль. Defaults to Body(embed=True).
+        user_service (UserService, optional): Сервис пользователей.
+            Defaults to Depends(get_user_service).
+
+    Raises:
+        HTTPException: 404 — пользователь не найден; 400 — новый пароль
+            совпадает со старым.
+
+    Returns:
+        ResponseSchema: Сообщение о смене пароля.
+    """
     try:
         await user_service.update_user_password(
             user_id=user_id, 

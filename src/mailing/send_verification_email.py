@@ -12,6 +12,17 @@ async def send_verification_email(
     verification_token: str,
     verification_link: str = "http://127.0.0.1:5500/verify-email.html"
 ):
+    """Сформировать и отправить письмо для подтверждения email.
+
+    Письмо содержит ссылку с токеном и сам токен для ручного ввода; HTML-версия
+    рендерится из шаблона email-verify-template.html.
+
+    Args:
+        user (UserRead): Пользователь-получатель.
+        verification_token (str): Токен подтверждения.
+        verification_link (str, optional): URL страницы подтверждения.
+            Defaults to "http://127.0.0.1:5500/verify-email.html".
+    """
     url = f"{verification_link}?token={verification_token}"
     recepient = user.email
     subject = "Confirm your email for site.com"

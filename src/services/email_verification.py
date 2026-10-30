@@ -6,6 +6,12 @@ from src.schemas.exceptions.users import UserAlreadyVerifiedException
 
 class EmailVerificationService:
     def __init__(self, verification_token_repo: VerificationTokenRepo):
+        """Инициализировать сервис подтверждения email.
+
+        Args:
+            verification_token_repo (VerificationTokenRepo): Репозиторий токенов
+                подтверждения email.
+        """
         self.verification_token_repo = verification_token_repo
 
     
@@ -14,6 +20,18 @@ class EmailVerificationService:
         user_id: int,
         is_verified: bool
     ) -> str:
+        """Сгенерировать и сохранить токен подтверждения email.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            is_verified (bool): Подтверждён ли уже email пользователя.
+
+        Raises:
+            UserAlreadyVerifiedException: Email пользователя уже подтверждён.
+
+        Returns:
+            str: Сгенерированный токен подтверждения.
+        """
         if is_verified:
             raise UserAlreadyVerifiedException
         

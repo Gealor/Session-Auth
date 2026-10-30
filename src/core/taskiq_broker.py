@@ -10,6 +10,14 @@ from .config import settings
 
 
 def prepare_taskiq() -> Tuple[AioPikaBroker, TaskiqScheduler]:
+    """Создать и настроить брокер TaskIQ и планировщик задач.
+
+    Брокер работает через RabbitMQ, результаты хранятся в Redis, ошибки
+    задач повторяются через SmartRetryMiddleware.
+
+    Returns:
+        Tuple[AioPikaBroker, TaskiqScheduler]: Брокер и планировщик.
+    """
     result_backend = RedisAsyncResultBackend(
         redis_url=settings.redis.redis_url,
         result_ex_time=settings.redis.results_ex_time_in_seconds,

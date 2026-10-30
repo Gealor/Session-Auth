@@ -13,5 +13,10 @@ async_session_maker = async_sessionmaker(
 )
 
 async def db_session_getter():
+    """Зависимость: выдать асинхронную сессию БД и закрыть её после использования.
+
+    Yields:
+        AsyncSession: Асинхронная сессия SQLAlchemy.
+    """
     async with async_session_maker() as session:
         yield session

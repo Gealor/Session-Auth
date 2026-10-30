@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from dateutil.tz import UTC
-from sqlalchemy import Select, delete, func, select, update
+from sqlalchemy import Select, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
+from src.core.date_now import get_current_datetime
 from src.models.sessions import SessionToken
 from src.core.logger import log
 from src.schemas.exceptions.database import DatabaseException
@@ -14,15 +14,38 @@ from src.schemas.exceptions.token import SessionTokenNotFoundException
 
 class TokenRepository:
     def __init__(self, db_session: AsyncSession):
+        """Инициализировать репозиторий сессионных токенов.
+
+        Args:
+            db_session (AsyncSession): Асинхронная сессия SQLAlchemy.
+        """
         self.db_session = db_session
 
     def _load_user(self, stmt: Select) -> Select:
         # joinedload подгружает связи с помощью соедниения (join), а selectinload с помощью второго select (зачастую применятся при отношении ...-ко-многим)
+        """Добавить к запросу подгрузку связанного пользователя через JOIN.
+
+        Args:
+            stmt (Select): Исходный SELECT-запрос по SessionToken.
+
+        Returns:
+            Select: Запрос с опцией joinedload(SessionToken.user).
+        """
         loaded_user_stmt = stmt.options(joinedload(SessionToken.user))
         return loaded_user_stmt
 
 
     async def get_token_by_user_id(self, user_id: int, load_user: bool = False) -> str | None:
+        """Получить хэш сессионного токена пользователя.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            load_user (bool, optional): Подгрузить связанного пользователя.
+                Defaults to False.
+
+        Returns:
+            str | None: Хэш токена или None, если сессии нет.
+        """
         stmt = select(SessionToken.session_token).where(SessionToken.user_id == user_id)
 
         if load_user:
@@ -35,6 +58,16 @@ class TokenRepository:
         return token_hash
 
     async def get_token_by_hash(self, token_hash: str, load_user: bool = False) -> SessionToken | None:
+        """Получить запись сессии по хэшу токена.
+
+        Args:
+            token_hash (str): Хэш сессионного токена.
+            load_user (bool, optional): Подгрузить связанного пользователя тем же
+                запросом. Defaults to False.
+
+        Returns:
+            SessionToken | None: Запись сессии или None, если не найдена.
+        """
         stmt = select(SessionToken).where(SessionToken.session_token == token_hash)
 
         if load_user:
@@ -47,6 +80,16 @@ class TokenRepository:
         return record
 
     async def create_record(self, user_id: int, token_hash: str, expired_at: datetime) -> None:
+        """Создать запись сессионного токена.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            token_hash (str): Хэш сессионного токена.
+            expired_at (datetime): Момент истечения сессии.
+
+        Raises:
+            DatabaseException: Ошибка целостности при сохранении записи.
+        """
         record = SessionToken(
             user_id=user_id,
             session_token=token_hash,
@@ -66,6 +109,20 @@ class TokenRepository:
     async def update_record(
         self, user_id: int, token: str, expired_at: datetime
     ) -> str:
+        """Обновить сессионный токен пользователя.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+            token (str): Новый хэш сессионного токена.
+            expired_at (datetime): Новый момент истечения сессии.
+
+        Raises:
+            SessionTokenNotFoundException: У пользователя нет записи сессии.
+            DatabaseException: Ошибка целостности при сохранении записи.
+
+        Returns:
+            str: Сохранённый хэш токена.
+        """
         stmt = (
             update(SessionToken)
             .values(session_token=token, expired_at=expired_at)
@@ -89,6 +146,14 @@ class TokenRepository:
         return record.session_token
 
     async def delete_token(self, user_id: int) -> None:
+        """Удалить сессионный токен пользователя.
+
+        Args:
+            user_id (int): Идентификатор пользователя.
+
+        Raises:
+            DatabaseException: Ошибка целостности при удалении записи.
+        """
         stmt = delete(SessionToken).where(SessionToken.user_id == user_id)
         await self.db_session.execute(stmt)
 
@@ -102,7 +167,15 @@ class TokenRepository:
         log.info("Deleted session token with user_id=%d", user_id)
     
     async def delete_expired_at_tokens(self) -> int:
-        now = datetime.now(tz=UTC)
+        """Удалить все сессионные токены с истёкшим сроком действия.
+
+        Raises:
+            DatabaseException: Ошибка целостности при удалении записей.
+
+        Returns:
+            int: Количество удалённых записей.
+        """
+        now = get_current_datetime()
         stmt = (
             delete(SessionToken)
             .where(SessionToken.expired_at <= now)

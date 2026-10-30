@@ -1,6 +1,8 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from src.core.date_now import get_current_datetime
 
 
 class UserBase(BaseModel):
@@ -37,7 +39,7 @@ class UserDelete(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     is_active: bool = False
-    deleted_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
+    deleted_at: datetime | None = Field(default_factory=lambda: get_current_datetime())
 
 
 class UserChangePassword(BaseModel):
