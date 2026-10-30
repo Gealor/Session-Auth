@@ -108,7 +108,7 @@ class UserService:
             token=token,
         )
         
-        user_old = await self.user_repo.get_user_by_id(user_id=user_id)
+        user_old = await self.user_repo.get_user_by_id(user_id=user_id, exclude_inactive=True)
         if user_old is None:
             raise UserNotFoundException
         if user_old.is_verified:
