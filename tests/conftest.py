@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from sqlalchemy import NullPool
@@ -14,8 +14,11 @@ from sqlalchemy.ext.asyncio import (
 from testcontainers.postgres import PostgresContainer
 
 from src.core.auth.passwords import hash_password
+from src.core.date_now import get_current_datetime
 from src.models import Base
+from src.models.sessions import SessionToken
 from src.models.user import User
+from src.repositories.session_repository import TokenRepository
 from src.repositories.user_repository import UserRepository
 
 TEST_PASSWORD = "TestPassword123!"
@@ -115,5 +118,35 @@ def make_user(session_maker: async_sessionmaker[AsyncSession]) -> Callable[..., 
 
 
 @pytest.fixture()
+def make_session_token(
+    session_maker: async_sessionmaker[AsyncSession],
+) -> Callable[..., Awaitable[SessionToken]]:
+    async def _make_session_token(
+        *,
+        user_id: int,
+        token_hash: str | None = None,
+        expired_at: datetime | None = None,
+    ) -> SessionToken:
+        record = SessionToken(
+            user_id=user_id,
+            session_token=token_hash or f"hash-{uuid.uuid4().hex}",
+            expired_at=expired_at or get_current_datetime() + timedelta(days=1),
+        )
+        async with session_maker() as session:
+            session.add(record)
+            await session.commit()
+            await session.refresh(record)
+
+        return record
+
+    return _make_session_token
+
+
+@pytest.fixture()
 def user_repo(async_session: AsyncSession) -> UserRepository:
     return UserRepository(db_session=async_session)
+
+
+@pytest.fixture()
+def token_repo(async_session: AsyncSession) -> TokenRepository:
+    return TokenRepository(db_session=async_session)
