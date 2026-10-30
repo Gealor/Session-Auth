@@ -165,6 +165,9 @@ class UserRepository:
             log.error("Failed to update user: %s", e)
             raise DatabaseException
 
+        if user is None:
+            return None
+        
         await self.db_session.refresh(user)
         return user
 
