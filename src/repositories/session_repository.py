@@ -130,16 +130,16 @@ class TokenRepository:
             .returning(SessionToken)
         )
 
-        record = await self.db_session.scalar(stmt)
-        if record is None:
-            raise SessionTokenNotFoundException
-
         try:
+            record = await self.db_session.scalar(stmt)
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
             log.error("Failed to update session_token: %s", e)
             raise DatabaseException
+
+        if record is None:
+            raise SessionTokenNotFoundException
 
         await self.db_session.refresh(record)
         log.info("Update session token for user_id=%d", record.user_id)
