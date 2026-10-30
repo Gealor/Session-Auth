@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 
 import pytest
+from redis.asyncio import Redis
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from testcontainers.community.redis import RedisContainer
 from testcontainers.postgres import PostgresContainer
 
 from src.core.auth.passwords import hash_password
@@ -18,6 +20,7 @@ from src.core.date_now import get_current_datetime
 from src.models import Base
 from src.models.sessions import SessionToken
 from src.models.user import User
+from src.repositories.redis.verification_token_repository import VerificationTokenRepository
 from src.repositories.session_repository import TokenRepository
 from src.repositories.user_repository import UserRepository
 
@@ -150,3 +153,31 @@ def user_repo(async_session: AsyncSession) -> UserRepository:
 @pytest.fixture()
 def token_repo(async_session: AsyncSession) -> TokenRepository:
     return TokenRepository(db_session=async_session)
+
+
+# ----------------------------------------------------------------------------- Redis
+
+
+@pytest.fixture(scope="session")
+def redis_container() -> Generator[RedisContainer, None, None]:
+    with RedisContainer("redis:7") as container:
+        yield container
+
+
+@pytest.fixture(scope="function")
+async def redis_client(redis_container: RedisContainer) -> AsyncGenerator[Redis, None]:
+    # Как в src/core/redis_client.py: без decode_responses, значения приходят в bytes
+    client = Redis(
+        host=redis_container.get_container_host_ip(),
+        port=int(redis_container.get_exposed_port(redis_container.port)),
+    )
+    await client.flushdb()
+
+    yield client
+
+    await client.aclose()
+
+
+@pytest.fixture()
+def verification_token_repo(redis_client: Redis) -> VerificationTokenRepository:
+    return VerificationTokenRepository(redis=redis_client)
