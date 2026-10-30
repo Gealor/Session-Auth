@@ -35,21 +35,18 @@ class AuthService:
     async def _save_session_token(self, user_id: int, token_hash: str):
         """Сохранить хэш сессионного токена пользователя.
 
-        Если у пользователя уже есть сессия, запись обновляется новым хэшем и сроком
-        действия, иначе создаётся новая запись.
+        Если у пользователя уже есть сессия, она заменяется новым хэшем и сроком
+        действия, иначе создаётся новая. Делается одним атомарным upsert, чтобы
+        параллельные входы одного пользователя не конфликтовали.
 
         Args:
             user_id (int): Идентификатор пользователя.
             token_hash (str): SHA-256 хэш сессионного токена.
         """
-        existing_token = await self.token_repo.get_token_by_user_id(user_id)
         expired_at = get_current_datetime() + relativedelta(
             minutes=settings.auth.session_id_expire_minutes
         )
-        if existing_token:
-            await self.token_repo.update_record(user_id, token_hash, expired_at)
-        else:
-            await self.token_repo.create_record(user_id, token_hash, expired_at)
+        await self.token_repo.upsert_record(user_id, token_hash, expired_at)
 
     async def register_user(
         self,
