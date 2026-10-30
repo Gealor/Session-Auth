@@ -29,7 +29,7 @@ INACTIVE_STATES = [
 
 
 async def _password_matches(password: str, password_hash: str) -> bool:
-    return await compare_hashed_passwords(password.encode("utf-8"), password_hash.encode("utf-8"))
+    return await compare_hashed_passwords(password, password_hash.encode("utf-8"))
 
 
 # ------------------------------------------------------------------------ update_user
