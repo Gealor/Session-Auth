@@ -85,7 +85,7 @@ class UserService:
         if not user:
             raise UserNotFoundException
 
-        if not (user.deleted_at or user.is_active):
+        if not user.deleted_at and user.is_active:
             raise UserNotDeletedException
 
         await self.user_repo.restore_user(user_id=user_id)
