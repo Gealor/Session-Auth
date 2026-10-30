@@ -88,7 +88,7 @@ class AuthService:
             user_register_data,
         )
 
-        return ResponseSchema(msg="Succesful registration. Now you can log in.")
+        return ResponseSchema(msg="Successful registration. Now you can log in.")
 
     async def login_user(self, email: EmailStr, password: str) -> str:
         """Аутентифицировать пользователя и создать сессию.
@@ -133,7 +133,7 @@ class AuthService:
         )
         log.info("Session token created and saved.")
 
-        log.info("Succesful log in in account: %s", email)
+        log.info("Successful log in in account: %s", email)
         return token
 
     async def logout_user(self, user_id: int):
