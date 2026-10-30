@@ -1,7 +1,15 @@
 import asyncio
+import hashlib
 
 import bcrypt
 
+def _prehash(password: str | bytes) -> bytes:
+    """Привести пароль любой длины к 32 байтам для bcrypt."""
+    if isinstance(password, str):
+        password = password.encode("utf-8")
+    
+    hash_pw = hashlib.sha256(password)
+    return hash_pw.digest()
 
 async def hash_password(
     password: str,
@@ -15,7 +23,7 @@ async def hash_password(
         bytes: bcrypt-хэш пароля (вместе с солью).
     """
     salt = bcrypt.gensalt()
-    pwd_bytes: bytes = password.encode("utf-8")
+    pwd_bytes: bytes = _prehash(password)
     return await asyncio.to_thread(bcrypt.hashpw, pwd_bytes, salt) 
 # bcrypt имеет относительно медленные операции и тяжеловесные, также является C-расширением, поэтому GIL отпускается
 
@@ -33,4 +41,5 @@ async def compare_hashed_passwords(
     Returns:
         bool: True, если пароль совпадает с хэшем.
     """
-    return await asyncio.to_thread(bcrypt.checkpw, entered_password, hashed_password)
+    entered_password_hash = _prehash(entered_password)
+    return await asyncio.to_thread(bcrypt.checkpw, entered_password_hash, hashed_password)
