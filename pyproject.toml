@@ -19,6 +19,9 @@ dependencies = [
     "psycopg>=3.3.3",
     "pydantic-settings>=2.13.1",
     "pydantic[email]>=2.12.5",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1",
+    "pytest-cov>=7.1.0",
     "python-dateutil>=2.9.0.post0",
     "redis>=7.4.0",
     "ruff>=0.15.12",
@@ -29,3 +32,18 @@ dependencies = [
     "taskiq-redis>=1.2.2",
     "uvicorn>=0.42.0",
 ]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [
+    "src/alembic/versions",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+log_cli = true
+log_cli_level = "INFO"
+addopts = "-p no:warnings"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
