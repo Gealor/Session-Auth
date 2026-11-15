@@ -132,14 +132,14 @@ class UserService:
         """
         user = await self.user_repo.get_user_by_id(user_id=user_id)
         if user is None:
-            log.error("User with id=%d not found", user_id)
+            log.warning("User with id=%d not found", user_id)
             raise UserNotFoundException
 
         new_password_bytes = new_password.encode("utf-8")
         old_password_hash = user.password.encode("utf-8")
 
         if await compare_hashed_passwords(new_password_bytes, old_password_hash):
-            log.error("New password match with old. User_id=%d", user_id)
+            log.warning("New password match with old. User_id=%d", user_id)
             raise NewPasswordMatchWithOldException
         
         updated_password = {
@@ -150,7 +150,7 @@ class UserService:
             user_id=user_id,
             dict_data=updated_password,
         )
-        log.info("Password successful change on '%s' for user_id=%d", new_password, user_id)
+        log.info("Password successful changed for user_id=%d", user_id)
     
 
 

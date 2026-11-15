@@ -82,7 +82,7 @@ class VerificationTokenRepository:
                     raise InvalidVerificationTokenException
                 
                 user_id = int(user_id)
-                log.info("Got user_id: %d", user_id)
+                log.debug("Got user_id: %d", user_id)
                 
                 user_key = f"{settings.mailing.user_prefix}:{user_id}"
                 
