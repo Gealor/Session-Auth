@@ -105,7 +105,7 @@ class TokenRepository:
             raise DatabaseException
 
         await self.db_session.refresh(record)
-        log.info("Add session token for user with id: %s", record.user_id)
+        log.debug("Add session token for user with id: %s", record.user_id)
 
     async def update_record(
         self, user_id: int, token: str, expired_at: datetime
@@ -143,7 +143,7 @@ class TokenRepository:
             raise SessionTokenNotFoundException
 
         await self.db_session.refresh(record)
-        log.info("Update session token for user_id=%d", record.user_id)
+        log.debug("Update session token for user_id=%d", record.user_id)
         return record.session_token
 
     async def upsert_record(self, user_id: int, token_hash: str, expired_at: datetime) -> None:
@@ -179,7 +179,7 @@ class TokenRepository:
             log.error("Failed to upsert session_token: %s", e)
             raise DatabaseException
 
-        log.info("Upsert session token for user_id=%d", user_id)
+        log.debug("Upsert session token for user_id=%d", user_id)
 
     async def delete_token(self, user_id: int) -> None:
         """Удалить сессионный токен пользователя.
@@ -200,7 +200,7 @@ class TokenRepository:
             log.error("Failed to delete session token: %s", e)
             raise DatabaseException
 
-        log.info("Deleted session token with user_id=%d", user_id)
+        log.debug("Deleted session token with user_id=%d", user_id)
     
     async def delete_expired_at_tokens(self) -> int:
         """Удалить все сессионные токены с истёкшим сроком действия.

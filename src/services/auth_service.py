@@ -70,16 +70,12 @@ class AuthService:
             ResponseSchema: Сообщение об успешной регистрации.
         """
         if user_data.password != user_data.repeat_password:
-            log.error(
-                "Password and repeat password do not match: %s != %s",
-                user_data.password,
-                user_data.repeat_password,
-            )
+            log.warning("Password and repeat password do not match")
             raise PasswordsNotMatchException
 
         existing_user = await self.user_repo.get_user_by_email(user_data.email)
         if existing_user:
-            log.error("User with these email already exist")
+            log.warning("User with these email already exist")
             raise UserEmailAlreadyExistsException
 
         user_register_data = UserRegister(**user_data.model_dump())
@@ -110,7 +106,7 @@ class AuthService:
         """
         user = await self.user_repo.get_user_by_email(email=email)
         if not user:
-            log.error("User by email %s not found", email)
+            log.warning("User by email %s not found", email)
             raise UserNotFoundException
 
         is_valid = await compare_hashed_passwords(
@@ -118,20 +114,20 @@ class AuthService:
             hashed_password=user.password.encode("utf-8"),
         )
         if not is_valid:
-            log.error("Passwords do not match")
+            log.warning("Passwords do not match")
             raise PasswordsNotMatchException
 
         if not user.is_active:
-            log.error("User with email %s is not active", email)
+            log.warning("User with email %s is not active", email)
             raise UserNotActiveException
 
         token, token_hash = create_token()
-        log.info("Session token created.")
+        log.debug("Session token created.")
         await self._save_session_token(
             user_id=user.id,
             token_hash=token_hash,
         )
-        log.info("Session token created and saved.")
+        log.debug("Session token created and saved.")
 
         log.info("Successful log in in account: %s", email)
         return token

@@ -12,7 +12,7 @@ def _set_cookie(key: str, value: str, response: Response) -> None:
         value (str): Значение cookie.
         response (Response): HTTP-ответ, в который добавляется cookie.
     """
-    log.info("Setup cookie %s, value %s...", key, value)
+    log.debug("Setup cookie %s...", key)
     response.set_cookie(
         key=key,
         value=value,
@@ -31,7 +31,7 @@ def _clear_cookie(key: str, response: Response) -> None:
         key (str): Имя cookie.
         response (Response): HTTP-ответ, в который добавляется удаление cookie.
     """
-    log.info("Delete cookie %s...", key)
+    log.debug("Delete cookie %s...", key)
     response.delete_cookie(
         key=key,
         samesite=settings.auth.samesite,

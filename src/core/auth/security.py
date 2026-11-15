@@ -47,7 +47,7 @@ async def get_current_user(
         UserRead: Текущий пользователь.
     """
     if not token:
-        log.error("Session token user not found: %s", token)
+        log.warning("Session token not provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token: Session token not set",
@@ -57,13 +57,13 @@ async def get_current_user(
 
     token_record = await TokenRepository(db).get_token_by_hash(token_hash, load_user=True)
     if token_record is None:
-        log.error("Session token not found: %s", token)
+        log.warning("Session token not found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token: Session token not found",
         )
 
-    log.info(
+    log.debug(
         "Token: user_id = %d\n token_hash = %s\n expired_at = %s",
         token_record.user_id,
         token_record.session_token,
@@ -72,7 +72,7 @@ async def get_current_user(
 
     current_datetime = get_current_datetime()
     if current_datetime >= token_record.expired_at:
-        log.error("Session token expired")
+        log.warning("Session token expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token: Session token expired",
@@ -87,7 +87,7 @@ async def get_current_user(
     user = UserRead.model_validate(token_record.user) 
     
     if not user or not user.is_active:
-        log.error("User with id=%d is not active or not exist", user.id)
+        log.warning("User with id=%d is not active or not exist", user.id)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="The user was not found or deleted",

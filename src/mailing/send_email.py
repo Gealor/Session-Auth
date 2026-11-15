@@ -26,7 +26,7 @@ async def send_email(
     message["To"] = recepient
     message["Subject"] = subject
 
-    log.info("\n\tRecepient: %s\n\tSubject: %s", recepient, subject)
+    log.debug("\n\tRecepient: %s\n\tSubject: %s", recepient, subject)
 
     plain_text_message = MIMEText(
         plain_content,
@@ -41,7 +41,7 @@ async def send_email(
             "utf-8",
         )
         message.attach(html_message)
-    log.info("Sending mail...")
+    log.debug("Sending mail...")
     await aiosmtplib.send(
         message,
         hostname=settings.smtp.host,

@@ -29,5 +29,5 @@ async def cleanup_expired_tokens(
     Args:
         db_session (AsyncSession): Сессия БД, внедряется через TaskiqDepends.
     """
-    log.info("Clean expired tokens...")
+    log.debug("Clean expired tokens...")
     await clear_expired_database_tokens(db_session)

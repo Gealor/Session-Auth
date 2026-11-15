@@ -111,8 +111,8 @@ class UserRepository:
             orig = e.orig.__cause__
             if isinstance(orig, UniqueViolationError):
                 # В asyncpg доступ к имени ограничения идет напрямую: cause.constraint_name
-                log.error("Failed to create user, unique violation: %s", orig.constraint_name)
-                log.error(orig.detail)
+                log.warning("Failed to create user, unique violation: %s", orig.constraint_name)
+                log.warning(orig.detail)
                 # raise orig
                 raise UniqueException(exc=orig)
             
@@ -157,8 +157,8 @@ class UserRepository:
             orig = e.orig.__cause__ # не можем просто написать orig = e.orig, т.к. SQLAlchemy оборачивает все ошибки в свою IntegrityError, аналогично не можем просто ловить UniqueViolationError в except блоке
             if isinstance(orig, UniqueViolationError):
                 # В asyncpg доступ к имени ограничения идет напрямую: cause.constraint_name
-                log.error("Failed to update user, unique violation: %s", orig.constraint_name)
-                log.error(orig.detail)
+                log.warning("Failed to update user, unique violation: %s", orig.constraint_name)
+                log.warning(orig.detail)
                 # raise orig
                 raise UniqueException(exc=orig)
             
@@ -200,7 +200,7 @@ class UserRepository:
         if user is None:
             raise UserNotFoundException
         
-        log.info("Update user with id=%d", user_id)
+        log.debug("Update user with id=%d", user_id)
         return user
 
     async def delete_user(self, user_id: int) -> None:

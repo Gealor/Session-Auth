@@ -56,7 +56,7 @@ async def send_verification_email(
         verification_token=verification_token,
     ) 
 
-    log.info("Send verification email...")
+    log.debug("Send verification email...")
     await send_email(
         recepient=recepient,
         subject=subject,
